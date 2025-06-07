@@ -10,7 +10,7 @@ class GroqEngine:
         """Initialize the Groq AI engine."""
         load_dotenv()
         self.api_key = os.getenv('GROQ_API_KEY')
-        self.model = os.getenv('GROQ_MODEL', 'llama3-8b-8192')  # Default to a more commonly available model
+        self.model = os.getenv('GROQ_MODEL', 'llama3-8b-8192')
         self.client = None
         self.initialize()
 
@@ -64,7 +64,7 @@ class GroqEngine:
                     {"role": "user", "content": prompt}
                 ],
                 temperature=0.7,
-                max_tokens=200
+                max_tokens=2000
             )
             
             # Validate the response
@@ -104,7 +104,7 @@ class GroqEngine:
                     {"role": "user", "content": prompt}
                 ],
                 temperature=0.7,
-                max_tokens=150
+                max_tokens=2000
             )
             
             # Validate the response
@@ -142,7 +142,7 @@ class GroqEngine:
                 model=self.model,
                 messages=[{"role": "user", "content": prompt}],
                 temperature=0.7,
-                max_tokens=200
+                max_tokens=2000
             )
             
             # Validate the response
@@ -197,7 +197,7 @@ class Character:
     def __init__(self, name: str, character_class: str, level: int = 1):
         self.name = name
         # Normalize and validate character class
-        valid_classes = ['Warrior', 'Mage', 'Rogue', 'enemy']
+        valid_classes = ['Warrior', 'Mage', 'Rogue']
         character_class = character_class.capitalize()
         if character_class not in valid_classes:
             raise ValueError(f"Invalid character class: {character_class}. Must be one of {', '.join(valid_classes)}")
@@ -289,6 +289,166 @@ class Character:
                 "armor": self.equipped["armor"].to_dict() if self.equipped["armor"] else None,
                 "accessories": [item.to_dict() for item in self.equipped["accessories"]]
             }
+        }
+
+
+
+    def show_inventory(self):
+        if not self.current_player:
+            return "No player character selected"
+
+        output = [
+            "=" * 50,
+            "Inventory:",
+            "=" * 50,
+            f"\nWeight: {self.current_player.inventory_weight}/{self.current_player.max_inventory_weight} kg",
+            "-" * 50,
+            "\nEquipped:",
+            "-" * 10,
+            f"Weapon: {self.current_player.equipped['weapon'] or 'None'}",
+            f"Armor: {self.current_player.equipped['armor'] or 'None'}"
+        ]
+
+        if self.current_player.equipped["accessories"]:
+            output.append("\nAccessories:")
+            for acc in self.current_player.equipped["accessories"]:
+                output.append(f"- {acc}")
+        else:
+            output.append("\nAccessories: None")
+
+        output.append("\nInventory Items:")
+        for item in self.current_player.inventory:
+            output.append(f"- {item}")
+
+        return "\n".join(output)
+
+    def equip_item(self, item_name: str) -> str:
+        """Equip an item from inventory"""
+        if not self.current_player:
+            return "No player character selected"
+
+        item = self.current_player.get_item(item_name)
+        if not item:
+            return f"Item '{item_name}' not found in inventory"
+
+        return self.current_player.equip_item(item)
+
+    def unequip_item(self, slot: str) -> str:
+        """Unequip an item from a slot"""
+        if not self.current_player:
+            return "No player character selected"
+
+        return self.current_player.unequip_item(slot)
+
+    def examine_item(self, item_name: str) -> str:
+        """Examine an item in inventory"""
+        if not self.current_player:
+            return "No player character selected"
+
+        item = self.current_player.get_item(item_name)
+        if not item:
+            return f"Item '{item_name}' not found in inventory"
+
+        return f"""Examining {item.name}:
+Type: {item.item_type}
+Stats: {json.dumps(item.stats, indent=2)}
+Stackable: {item.stackable}
+Max Stack: {item.max_stack}
+Quantity: {item.quantity if item.stackable else '1'}"""
+
+    def move_player(self, destination: str) -> str:
+        """Move player to a new location"""
+        if not self.current_player:
+            return "No player character selected"
+
+        if destination not in self.locations:
+            return f"Location '{destination}' does not exist"
+
+        self.current_player.current_location = destination
+        return f"You have arrived at {destination}.\n{self.locations[destination]['description']}"
+
+    def get_current_location(self) -> Dict[str, Any]:
+        """Get current location data"""
+        if not self.current_player:
+            return None
+
+        location = self.locations.get(self.current_player.current_location)
+        if not location:
+            return None
+
+        return {
+            "name": self.current_player.current_location,
+            "description": location["description"],
+            "exits": location["exits"],
+            "npcs": location["npcs"]
+        }
+
+    def start_combat(self, enemy_name: str) -> str:
+        """Start combat with an enemy"""
+        if not self.current_player:
+            return "No player character selected"
+
+        enemy = self.enemies.get(enemy_name)
+        if not enemy:
+            return f"Enemy '{enemy_name}' does not exist"
+
+        self.current_enemy = Character(
+            name=enemy_name,
+            character_class="enemy",
+            level=enemy["level"]
+        )
+        self.current_enemy.hit_points = enemy["hit_points"]
+        self.current_enemy.attributes = enemy["attributes"]
+        self.combat_mode = True
+
+        return f"Combat started with {enemy_name}!"
+
+    def end_combat(self, message: str = "") -> str:
+        """End combat mode"""
+        self.current_enemy = None
+        self.combat_mode = False
+        return message
+
+    def handle_attack(self) -> str:
+        """Handle player attack in combat"""
+        if not self.current_player or not self.current_enemy:
+            return "No combat in progress"
+
+        player_attack = self.current_player.get_attack_bonus()
+        enemy_defense = self.current_enemy.get_defense_bonus()
+
+        # Simple combat calculation
+        hit = random.randint(1, 20) + player_attack - enemy_defense
+        if hit > 0:
+            damage = random.randint(1, 6) + player_attack
+            self.current_enemy.hit_points -= damage
+            if self.current_enemy.hit_points <= 0:
+                self.end_combat()
+                return f"You hit for {damage} damage! {self.current_enemy.name} has been defeated!"
+            return f"You hit for {damage} damage! {self.current_enemy.name} has {self.current_enemy.hit_points} HP left."
+        return "You missed!"
+
+    def get_player_status(self) -> Dict[str, Any]:
+        """Get player status for display"""
+        if not self.current_player:
+            return None
+
+        return {
+            "name": self.current_player.name,
+            "class": self.current_player.character_class,
+            "level": self.current_player.level,
+            "hit_points": self.current_player.hit_points,
+            "attributes": self.current_player.attributes
+        }
+
+    def get_enemy_status(self) -> Dict[str, Any]:
+        """Get enemy status for display"""
+        if not self.current_enemy:
+            return None
+
+        return {
+            "name": self.current_enemy.name,
+            "hit_points": self.current_enemy.hit_points
         }
 
 class RPGGame:
@@ -561,39 +721,6 @@ class RPGGame:
         location = self.get_current_location()
         return f"You have arrived at {destination}.\n{location['description']}"
 
-    def create_prompt_with_sensory_details(self, user_input: str, context: Dict[str, Any]) -> str:
-        """Create a prompt with sensory details and rule compliance"""
-        return f"""
-You are an expert Dungeon Master AI running a text-based RPG. Every response MUST:
-- Comply with all rules from the following JSON files:
-  - rules.json
-  - squad_tactics.json
-  - making_mercs.json
-  - building_worlds.json
-- Maintain game balance and enforce all rule constraints.
-- Describe the scene vividly using sensory perceptions (sight, sound, smell, feel).
-- Mention all relevant NPCs and world objects present.
-- End with a prompt asking the player what they want to do next.
-
-========================= RULES =========================
-📘 rules.json:
-{json.dumps(self.rules.get('rules.json', {}), indent=2)}
-⚔️ squad_tactics.json:
-{json.dumps(self.rules.get('squad_tactics.json', {}), indent=2)}
-🧙 making_mercs.json:
-{json.dumps(self.rules.get('making_mercs.json', {}), indent=2)}
-🌍 building_worlds.json:
-{json.dumps(self.rules.get('building_worlds.json', {}), indent=2)}
-
-====================== CONTEXT ========================
-{json.dumps(context, indent=2)}
-
-=================== PLAYER ACTION =====================
-Player input: {user_input}
-
-=================== YOUR RESPONSE =====================
-"""
-
     def process_input(self, user_input: str, context: Dict[str, Any] = None) -> str:
         """Process user input and return a response."""
         if not context:
@@ -689,12 +816,12 @@ Available Commands:
                 
             location = self.get_current_location()
             if npc_name in location.get("npcs", []):
-                dialogue = self.groq_engine.generate_npc_dialogue(
-                    npc_name,
-                    self.current_player.name,
+                npc_dialogue = self.groq_engine.generate_npc_dialogue(
+                    npc_name, 
+                    self.current_player.name, 
                     self.current_player.current_location
                 )
-                return dialogue
+                return npc_dialogue
             return f"{npc_name} is not here."
             
         return f"I don't understand '{command}'. Type 'help' for a list of commands."
@@ -842,7 +969,6 @@ if __name__ == '__main__':
     display_header()
     print("Welcome to the Text RPG!")
     game = RPGGame()
-    game.initialize_groq()
     
     # Character creation
     print("\n--- Character Creation ---")
