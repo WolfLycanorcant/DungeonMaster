@@ -5,6 +5,156 @@ from typing import Dict, Any, List, Optional
 from dotenv import load_dotenv
 from groq import Groq
 
+class GroqEngine:
+    def __init__(self):
+        """Initialize the Groq AI engine."""
+        load_dotenv()
+        self.api_key = os.getenv('GROQ_API_KEY')
+        self.model = os.getenv('GROQ_MODEL', 'llama3-8b-8192')  # Default to a more commonly available model
+        self.client = None
+        self.initialize()
+
+    def initialize(self):
+        """Initialize the Groq client."""
+        if not self.api_key:
+            print("Warning: GROQ_API_KEY not found in .env file. Some features may be limited.")
+            return
+
+        try:
+            self.client = Groq(api_key=self.api_key)
+            print("Groq client initialized successfully")
+            
+            # Test the connection with a simple request
+            test_response = self.client.generate(
+                model=self.model,
+                messages=[{"role": "user", "content": "Test connection"}],
+                max_tokens=10
+            )
+            print(f"Groq model {self.model} is accessible")
+        except Exception as e:
+            print(f"Warning: Failed to initialize Groq client: {e}")
+            print(f"Make sure your API key has access to model: {self.model}")
+
+    def generate_description(self, context: Dict[str, Any]) -> str:
+        """Generate a location description using Groq AI."""
+        if not self.client:
+            return "The location is dark and foreboding."
+
+        try:
+            # Create a structured prompt for location description
+            prompt = f"""
+            You are a master Dungeon Master. Describe this location:
+            {json.dumps(context, indent=2)}
+            
+            Include:
+            - Sensory details (sights, sounds, smells)
+            - Environmental conditions
+            - Points of interest
+            - NPC interactions
+            - Potential dangers
+            - Interactive elements
+
+            Keep it immersive and engaging.
+            """
+
+            response = self.client.chat.completions.create(
+                model=self.model,
+                messages=[
+                    {"role": "system", "content": "You are a master Dungeon Master. Provide vivid, immersive descriptions of locations and interactions."},
+                    {"role": "user", "content": prompt}
+                ],
+                temperature=0.7,
+                max_tokens=200
+            )
+            
+            # Validate the response
+            if not response or not hasattr(response, 'choices') or not response.choices:
+                print("Warning: Invalid response from Groq")
+                return "The location is dark and foreboding."
+                
+            return response.choices[0].message.content
+        except Exception as e:
+            print(f"Warning: Failed to generate description: {e}")
+            return "The location is dark and foreboding."
+
+    def generate_npc_dialogue(self, npc_name: str, player_name: str, location: str) -> str:
+        """Generate NPC dialogue using Groq AI."""
+        if not self.client:
+            return f"Hello, {player_name}. Welcome to {location}."
+
+        try:
+            # Create a structured prompt for NPC dialogue
+            prompt = f"""
+            You are {npc_name}, an NPC in a medieval fantasy world.
+            A player named {player_name} approaches you in {location}.
+            
+            Respond in character with:
+            - Your personality and backstory
+            - Local knowledge
+            - Potential quests
+            - Interesting dialogue
+            
+            Keep it immersive and engaging.
+            """
+
+            response = self.client.chat.completions.create(
+                model=self.model,
+                messages=[
+                    {"role": "system", "content": "You are an NPC in a medieval fantasy world. Speak in character and provide engaging dialogue."},
+                    {"role": "user", "content": prompt}
+                ],
+                temperature=0.7,
+                max_tokens=150
+            )
+            
+            # Validate the response
+            if not response or not hasattr(response, 'choices') or not response.choices:
+                print("Warning: Invalid response from Groq")
+                return f"Hello, {player_name}. Welcome to {location}."
+                
+            return response.choices[0].message.content
+        except Exception as e:
+            print(f"Warning: Failed to generate NPC dialogue: {e}")
+            return f"Hello, {player_name}. Welcome to {location}."
+
+    def generate_action_description(self, player: Dict[str, Any], action: str) -> str:
+        """Generate a description of the player's action using Groq AI."""
+        if not self.client:
+            return f"{action}"
+
+        try:
+            # Create a structured prompt for action description
+            prompt = f"""
+            You are a master Dungeon Master. Describe this player action:
+            Player: {json.dumps(player, indent=2)}
+            Action: {action}
+            
+            Include:
+            - Action details
+            - Environmental effects
+            - Dynamic descriptions
+            - Potential outcomes
+
+            Keep it immersive and engaging.
+            """
+
+            response = self.client.generate(
+                model=self.model,
+                messages=[{"role": "user", "content": prompt}],
+                temperature=0.7,
+                max_tokens=200
+            )
+            
+            # Validate the response
+            if not response or not hasattr(response, 'choices') or not response.choices:
+                print("Warning: Invalid response from Groq")
+                return f"{action}"
+                
+            return response.choices[0].message.content
+        except Exception as e:
+            print(f"Warning: Failed to generate action description: {e}")
+            return f"{action}"
+
 class Item:
     def __init__(self, name: str, item_type: str, stats: Dict[str, Any], stackable: bool = False, max_stack: int = 1):
         self.name = name
@@ -12,7 +162,7 @@ class Item:
         self.stats = stats
         self.stackable = stackable
         self.max_stack = max_stack
-        self.quantity = 1 if stackable else None
+        self.quantity = 1 if not stackable else None
         
     def to_dict(self) -> Dict[str, Any]:
         return {
@@ -147,76 +297,141 @@ class RPGGame:
         self.current_player = None
         self.current_enemy = None
         self.combat_mode = False
-        self.groq_client = None
+        self.groq_engine = GroqEngine()
         self.rules = {}
-        self.initialize_groq()
-        self.initialize_game_data()
-        self.load_rules()
-
-    def initialize_groq(self):
-        """Initialize the Groq client using environment variables."""
-        load_dotenv()
-        api_key = os.getenv('GROQ_API_KEY')
-        model = os.getenv('GROQ_MODEL', 'mixtral-8x7b-instruct')
+        self.session_history = []
+        self.current_weather = None
+        self.current_time = "morning"
         
-        if not api_key:
-            print("Warning: GROQ_API_KEY not found in .env file. Some features may be limited.")
-            return
-        
-        try:
-            self.groq_client = Groq(api_key=api_key)
-            self.groq_model = model
-        except Exception as e:
-            print(f"Warning: Failed to initialize Groq client: {e}")
-            return
-        
-        # Test the connection
-        try:
-            test_response = self.groq_client.generate(
-                model=self.groq_model,
-                messages=[{"role": "user", "content": "Test connection"}],
-                max_tokens=10
-            )
-            print("Groq client initialized successfully")
-        except Exception as e:
-            print(f"Warning: Failed to test Groq connection: {e}")
-
-    def load_rules(self):
-        """Load game rules from JSON files."""
-        self.rules = {
-            "rules.json": {
-                "game_mechanics": {
-                    "level_up_bonus": 5,
-                    "xp_per_level": 1000
-                }
-            },
-            "squad_tactics.json": {
-                "combat": {
-                    "hit_bonus": 2,
-                    "damage_bonus": 1
-                }
-            },
-            "making_mercs.json": {
-                "character_creation": {
-                    "base_attributes": 10,
-                    "attribute_points": 5
-                }
-            },
-            "building_worlds.json": {
-                "world_generation": {
-                    "max_locations": 10,
-                    "npc_density": 0.5
-                }
+        # Initialize session memory
+        self.session_memory = {
+            "actions": [],
+            "last_summary": "",
+            "context": {
+                "player": {},
+                "location": {},
+                "environment": {}
             }
         }
+        
+        self.initialize_game_data()
+        self.load_rules()
+        
+        # Initialize Groq if available
+        if self.groq_engine.client:
+            print("Groq AI initialized successfully")
+        else:
+            print("Warning: Groq AI not available. Some features may be limited.")
 
-        filenames = ["rules.json", "squad_tactics.json", "making_mercs.json", "building_worlds.json"]
-        for filename in filenames:
-            try:
-                with open(os.path.join("rules", filename), "r") as f:
-                    self.rules[filename] = json.load(f)
-            except Exception as e:
-                print(f"Warning: Could not load {filename} - using default rules")
+    def load_rules(self):
+        """Load all rule files from the Json Files directory."""
+        rules_dir = "Json Files"
+        for filename in os.listdir(rules_dir):
+            if filename.endswith('.json'):
+                try:
+                    with open(os.path.join(rules_dir, filename), 'r') as f:
+                        self.rules[filename] = json.load(f)
+                except Exception as e:
+                    print(f"Warning: Failed to load {filename}: {e}")
+
+    def update_session_memory(self, action: str, response: str):
+        """Update the session memory with the latest action and response."""
+        # Update session_history and session_memory with the same data
+        self.session_history.append({
+            "action": action,
+            "response": response,
+            "time": self.current_time,
+            "location": self.current_player.current_location if self.current_player else "Unknown"
+        })
+        
+        self.session_memory["actions"] = self.session_history[-5:]  # Keep last 5 actions
+        self.session_memory["last_summary"] = self._generate_session_summary()
+
+    def _generate_session_summary(self):
+        """Generate a summary of recent actions for session context."""
+        recent_actions = self.session_memory["actions"][-5:]
+        summary = []
+        
+        for action in recent_actions:
+            summary.append(f"[{action['time']}] In {action['location']}: {action['action']}")
+            summary.append(f"Response: {action['response'].split('.')[0]}.")
+            
+        return "\n".join(summary)
+
+    def build_prompt(self, user_input: str) -> str:
+        """Build a comprehensive prompt for Groq AI."""
+        # Get relevant rules
+        relevant_rules = []
+        for rule_file, rule_data in self.rules.items():
+            if rule_file == "rules.json":  # Always include main rules
+                relevant_rules.append(rule_data)
+            elif rule_file == "squad_tactics.json" and self.current_player:
+                relevant_rules.append(rule_data)
+            
+        # Build context
+        context = {
+            "player": {
+                "name": self.current_player.name if self.current_player else "Unknown",
+                "class": self.current_player.character_class if self.current_player else "Unknown",
+                "level": self.current_player.level if self.current_player else 0,
+                "inventory": [item.name for item in self.current_player.inventory] if self.current_player else []
+            },
+            "location": self.current_player.current_location if self.current_player else "Unknown",
+            "weather": self.current_weather,
+            "time": self.current_time,
+            "session_summary": self.session_memory["last_summary"]
+        }
+
+        # Build prompt
+        prompt = f"""
+        You are an expert Dungeon Master AI. Generate a vivid, sensory-rich description of the scene.
+        
+        [Rules]
+        {json.dumps(relevant_rules, indent=2)}
+        
+        [Current Context]
+        {json.dumps(context, indent=2)}
+        
+        Player input: {user_input}
+        
+        Please respond with a detailed description that:
+        1. Follows the game rules
+        2. Maintains consistency with previous actions
+        3. Includes sensory details
+        4. Provides clear next steps
+        """
+        
+        return prompt
+
+    def process_input(self, user_input: str, context: Dict[str, Any] = None) -> str:
+        """Process user input and return a response."""
+        if not context:
+            context = {}
+            
+        if not user_input:
+            return "Please enter a command."
+            
+        command = user_input.lower().strip()
+        
+        # Build prompt
+        prompt = self.build_prompt(user_input)
+        
+        try:
+            # Generate response
+            response = self.groq_engine.generate_description({
+                "prompt": prompt,
+                "rules": self.rules,
+                "context": context
+            })
+            
+            # Update session memory
+            self.update_session_memory(user_input, response)
+            
+            return response
+            
+        except Exception as e:
+            print(f"Error generating response: {e}")
+            return "I'm having trouble generating a response. Please try again."
 
     def initialize_game_data(self):
         """Initialize game data including locations and items."""
@@ -312,10 +527,22 @@ class RPGGame:
             return None
 
     def get_current_location(self) -> Dict[str, Any]:
-        """Get the current location details."""
+        """Get the current location details with Groq-generated description."""
         if not self.current_player:
             return {}
-        return self.locations.get(self.current_player.current_location, {})
+        
+        location = self.locations.get(self.current_player.current_location, {})
+        if location:
+            # Generate dynamic description using Groq
+            context = {
+                "name": self.current_player.current_location,
+                "description": location.get("description", ""),
+                "npcs": location.get("npcs", []),
+                "enemies": location.get("enemies", []),
+                "exits": location.get("exits", [])
+            }
+            location["dynamic_description"] = self.groq_engine.generate_description(context)
+        return location
 
     def move_player(self, destination: str) -> str:
         """Move the player to a new location if it's a valid destination."""
@@ -384,16 +611,13 @@ Player input: {user_input}
                 return "You need to create a character first."
                 
             response = [f"You are in {self.current_player.current_location}."]
-            response.append(location.get("description", ""))
+            response.append(location.get("dynamic_description", ""))
             
             if "exits" in location:
                 response.append(f"Exits: {', '.join(location['exits'])}")
                 
             if "npcs" in location:
                 response.append(f"You see: {', '.join(location['npcs'])}")
-                
-            if "enemies" in location and location["enemies"]:
-                response.append(f"Danger! You spot: {', '.join(location['enemies'])}")
                 
             return "\n".join(response)
             
@@ -443,7 +667,6 @@ Available Commands:
   status - Check your character's status
   go [direction] - Move to a new location
   talk [npc] - Talk to an NPC
-  attack - Attack an enemy (in combat)
   use [item] - Use an item from your inventory
   help (h) - Show this help message
   exit - Quit the game
@@ -466,26 +689,13 @@ Available Commands:
                 
             location = self.get_current_location()
             if npc_name in location.get("npcs", []):
-                if hasattr(self, 'groq_client') and self.groq_client:
-                    prompt = self.create_prompt_with_sensory_details(
-                        f"Talk to {npc_name}",
-                        {"current_location": self.current_player.current_location}
-                    )
-                    response = self.groq_client.generate(
-                        model="mixtral-8x7b-instruct",
-                        messages=[{"role": "user", "content": prompt}],
-                        temperature=0.7,
-                        max_tokens=1000
-                    )
-                    return response.choices[0].message.content
-                return f"You talk to {npc_name} and learn some interesting things."
+                dialogue = self.groq_engine.generate_npc_dialogue(
+                    npc_name,
+                    self.current_player.name,
+                    self.current_player.current_location
+                )
+                return dialogue
             return f"{npc_name} is not here."
-            
-        elif self.combat_mode:
-            if command.startswith("attack"):
-                return self.handle_attack()
-            elif command == "flee":
-                return self.end_combat("You flee from combat!")
             
         return f"I don't understand '{command}'. Type 'help' for a list of commands."
 
@@ -590,9 +800,49 @@ Weight: {item.stats.get('weight', 0)} kg
 Attributes: {json.dumps(item.stats, indent=2)}
 """
 
+def display_header():
+    print("\n" + "=" * 80)
+    print("Dungeon Master RPG")
+    print("=" * 80)
+    print()
+
+def display_character_info(player: Character):
+    print("Player Info:")
+    print(f"Name: {player.name}")
+    print(f"Class: {player.character_class}")
+    print(f"Level: {player.level}")
+    print(f"HP: {player.hit_points}")
+    print("\nAttributes:")
+    for attr, value in player.attributes.items():
+        print(f"{attr.capitalize()}: {value}")
+    print()
+
+def display_inventory(player: Character):
+    print("Inventory:")
+    if not player.inventory:
+        print("Empty")
+        return
+    
+    for item in player.inventory:
+        print(f"- {item.name} ({item.item_type})")
+    print()
+
+def display_main_menu():
+    print("\nMain Menu:")
+    print("1. Move to new location")
+    print("2. View inventory")
+    print("3. Equip item")
+    print("4. View character info")
+    print("5. Look around")
+    print("6. Talk to someone")
+    print("7. Exit game")
+    print()
+
 if __name__ == '__main__':
+    display_header()
     print("Welcome to the Text RPG!")
     game = RPGGame()
+    game.initialize_groq()
     
     # Character creation
     print("\n--- Character Creation ---")

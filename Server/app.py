@@ -62,52 +62,117 @@ def get_enemy_status():
         })
     return jsonify({"error": "No enemy in combat"}), 400
 
-@app.route('/api/start_combat', methods=['POST'])
-def start_combat():
+@app.route('/api/console_command', methods=['POST'])
+def console_command():
     try:
         data = request.get_json()
-        if not data:
-            return jsonify({"error": "No JSON data provided"}), 400
+        if not data or 'command' not in data:
+            return jsonify({"error": "No command provided"}), 400
+            
+        command = data['command'].lower()
+        
+        # Process command using RPGGame's process_input method
+        response = game.process_input(
+            command,
+            {
+                "player": {
+                    "name": game.current_player.name if game.current_player else "Unknown",
+                    "class": game.current_player.character_class if game.current_player else "Unknown",
+                    "level": game.current_player.level if game.current_player else 0
+                },
+                "current_location": game.current_player.current_location if game.current_player else "Unknown",
+                "combat_mode": game.combat_mode
+            }
+        )
+        
+        # Process game state changes based on command
+        if command.startswith("go "):
+            destination = command[3:].strip()
+            game_response = game.move_player(destination)
+            if "error" not in game_response:
+                response = f"{response}\n\n{game_response}"
+        elif command.startswith("talk to"):
+            npc_name = command[7:].strip()
+            location = game.get_current_location()
+            if npc_name in location.get("npcs", []):
+                npc_dialogue = game.groq_engine.generate_npc_dialogue(
+                    npc_name,
+                    game.current_player.name,
+                    game.current_player.current_location
+                )
+                response = f"{response}\n\n{npc_dialogue}"
+        elif command == "attack" and game.combat_mode:
+            combat_desc = game.groq_engine.generate_combat_description(
+                {
+                    "name": game.current_player.name,
+                    "class": game.current_player.character_class,
+                    "level": game.current_player.level,
+                    "hit_points": game.current_player.hit_points
+                },
+                {
+                    "name": game.current_enemy.name,
+                    "level": game.current_enemy.level,
+                    "hit_points": game.current_enemy.hit_points
+                }
+            )
+            combat_result = game.handle_attack()
+            response = f"{response}\n\n{combat_desc}\n\n{combat_result}"
+        
+        return jsonify({
+            "response": response,
+            "game_state": {
+                "player": {
+                    "name": game.current_player.name if game.current_player else None,
+                    "health": game.current_player.hit_points if game.current_player else None,
+                    "level": game.current_player.level if game.current_player else None
+                }
+            }
+        })
+        
     except Exception as e:
-        return jsonify({"error": "Invalid JSON data"}), 400
-    
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/api/look_around', methods=['POST'])
+def look_around():
+    try:
+        if not game.current_player:
+            return jsonify({"error": "No player created"}), 400
+            
+        location = game.get_current_location()
+        if not location:
+            return jsonify({"error": "No current location"}), 400
+            
+        # Generate description using Groq
+        description = game.groq_engine.generate_description({
+            "location": location,
+            "player": {
+                "name": game.current_player.name,
+                "class": game.current_player.character_class,
+                "level": game.current_player.level
+            }
+        })
+        
+        return jsonify({"description": description})
+        
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/api/check_inventory', methods=['GET'])
+def check_inventory():
     if not game.current_player:
         return jsonify({"error": "No player created"}), 400
-    
-    game.combat_mode = True
-    enemy_name = data.get('enemy_name', 'Goblin')
-    enemy = game.enemies.get(enemy_name)
-    if not enemy:
-        return jsonify({"error": "Invalid enemy name"}), 400
-    
-    game.current_enemy = Character(enemy_name, "enemy")
-    game.current_enemy.hit_points = enemy['hit_points']
-    game.current_enemy.attributes = enemy['attributes']
-    
-    return jsonify({"status": "combat_started"})
-
-@app.route('/api/player_attack', methods=['POST'])
-def player_attack():
-    if not game.combat_mode:
-        return jsonify({"error": "Not in combat"}), 400
-    
-    result = game.handle_attack()
-    return jsonify({"result": result})
-
-@app.route('/api/enemy_attack', methods=['POST'])
-def enemy_attack():
-    if not game.combat_mode:
-        return jsonify({"error": "Not in combat"}), 400
-    
-    # Simple enemy attack logic
-    damage = random.randint(1, 4) + game.current_enemy.attributes.get("strength", 0)
-    game.current_player.hit_points -= damage
-    
-    if game.current_player.hit_points <= 0:
-        game.end_combat("You have been defeated!")
-        return jsonify({"result": "You have been defeated!", "player_dead": True})
-    
-    return jsonify({"result": f"Enemy hits you for {damage} damage!"})
+        
+    inventory = []
+    for item in game.current_player.inventory:
+        inventory.append({
+            "name": item.name,
+            "type": item.item_type,
+            "stats": item.stats
+        })
+        
+    return jsonify({
+        "inventory": inventory
+    })
 
 @app.route('/api/get_location_description', methods=['GET'])
 def get_location_description():

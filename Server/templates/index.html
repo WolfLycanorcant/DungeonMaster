@@ -7,11 +7,40 @@
     <style>
         body {
             font-family: Arial, sans-serif;
-            max-width: 800px;
+            max-width: 1200px;
             margin: 0 auto;
             padding: 20px;
+            display: flex;
+            gap: 20px;
+        }
+
+        #character-creation {
+            margin-bottom: 20px;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background-color: #f9f9f9;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        input[type="text"], select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
         }
         #game-container {
+            flex: 1;
             border: 1px solid #ccc;
             padding: 20px;
             margin-bottom: 20px;
@@ -31,62 +60,238 @@
             margin: 5px;
             cursor: pointer;
         }
+        #console-container {
+            flex: 1;
+            border: 1px solid #ccc;
+            padding: 20px;
+            height: 600px;
+            overflow-y: auto;
+            background-color: #f5f5f5;
+        }
+
+        .console-command {
+            color: #1a73e8;
+            margin: 5px 0;
+            padding: 8px;
+            border-radius: 4px;
+            background-color: #e3f2fd;
+        }
+
+        .console-response {
+            color: #333;
+            margin: 5px 0;
+            padding: 8px;
+            border-radius: 4px;
+            background-color: #fff;
+        }
+
+        .console-error {
+            color: #c62828;
+            margin: 5px 0;
+            padding: 8px;
+            border-radius: 4px;
+            background-color: #ffebee;
+        }
+        .console-entry {
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        .console-prompt {
+            background-color: #e3f2fd;
+        }
+        .console-response {
+            background-color: #f3f3f3;
+        }
+        .console-error {
+            background-color: #ffebee;
+            color: #c62828;
+        }
+        .console-system {
+            background-color: #f5f5f5;
+            font-weight: bold;
+        }
+
+        .equipment-grid {
+            margin-bottom: 20px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background-color: #f9f9f9;
+        }
+
+        .grid-header {
+            text-align: center;
+            margin-bottom: 15px;
+        }
+
+        .grid-container {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            grid-auto-rows: 80px;
+        }
+
+        .grid-item {
+            background-color: white;
+            padding: 15px;
+            border-radius: 4px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            height: 100%;
+            min-height: 80px;
+        }
+
+        .icon-container {
+            width: 48px;
+            height: 48px;
+            margin: 0 auto 10px;
+            border-radius: 8px;
+            overflow: hidden;
+            background-color: #f0f0f0;
+            position: relative;
+        }
+
+        .empty-slot-placeholder {
+            width: 100%;
+            height: 100%;
+            background-color: #ddd;
+            border-radius: 8px;
+        }
+
+        .item-name {
+            font-size: 14px;
+            color: #666;
+            margin-top: 4px;
+        }
+
+        .empty-slot {
+            opacity: 0.5;
+        }
     </style>
 </head>
 <body>
     <h1>Dungeon Master RPG</h1>
     
     <div id="game-container">
-        <button onclick="initGame()">Start New Game</button>
-        <div id="combat-area">
-            <div class="character-status" id="player-status">
-                <h3>Player</h3>
-                <p>Name: <span id="player-name"></span></p>
-                <p>Health: <span id="player-health"></span></p>
-                <p>Level: <span id="player-level"></span></p>
+        <div id="character-creation">
+            <h2>Create Your Character</h2>
+            <div class="form-group">
+                <label for="character-name">Name:</label>
+                <input type="text" id="character-name" required>
             </div>
-            <div class="character-status" id="enemy-status">
-                <h3>Enemy</h3>
-                <p>Name: <span id="enemy-name"></span></p>
-                <p>Health: <span id="enemy-health"></span></p>
+            <div class="form-group">
+                <label for="character-class">Class:</label>
+                <select id="character-class">
+                    <option value="warrior">Warrior</option>
+                    <option value="wizard">Wizard</option>
+                    <option value="thief">Thief</option>
+                    <option value="healer">Healer</option>
+                </select>
+            </div>
+            <button onclick="createCharacter()">Create Character</button>
+        </div>
+
+        <div id="game-content">
+            <div id="game-output"></div>
+            
+            <div id="player-status">
+                <p>Name: <span id="player-name"></span></p>
+                <p>Class: <span id="player-class"></span></p>
+                <p>Health: <span id="player-health"></span></p>
+            </div>
+
+            <div class="game-buttons">
+                <button onclick="lookAround()">Look Around</button>
             </div>
         </div>
-        <div id="action-buttons">
-            <button onclick="startCombat()" id="start-combat">Start Combat</button>
-            <button onclick="playerAttack()" id="player-attack" disabled>Player Attack</button>
+    </div>
+    
+    <div id="console-container">
+        <div id="console-output"></div>
+        <div id="console-input-container">
+            <input type="text" id="console-input" placeholder="Enter your command..." onkeypress="handleKeyPress(event)" />
+            <button onclick="sendConsoleCommand()">Send</button>
         </div>
     </div>
 
     <script>
-        async function initGame() {
+        // Console message types
+        const CONSOLE_TYPES = {
+            COMMAND: 'command',
+            RESPONSE: 'response',
+            ERROR: 'error'
+        };
+
+        // Game state variables
+        let currentLocation = 'Starting Town';
+        let player = null;
+        let enemy = null;
+        let combatMode = false;
+        let consoleOutput = '';
+
+        // DOM Elements
+        const consoleOutputElement = document.getElementById('console-output');
+        const characterCreation = document.getElementById('character-creation');
+        const gameContent = document.getElementById('game-content');
+        const playerNameElement = document.getElementById('player-name');
+        const playerClassElement = document.getElementById('player-class');
+        const playerLevelElement = document.getElementById('player-level');
+        const playerHealthElement = document.getElementById('player-health');
+
+        // Toggle character creation vs game content
+        function toggleCharacterCreation() {
+            if (!player) {
+                characterCreation.style.display = 'block';
+                gameContent.style.display = 'none';
+            } else {
+                characterCreation.style.display = 'none';
+                gameContent.style.display = 'block';
+            }
+        }
+
+        // Create new character
+        async function createCharacter() {
+            const name = document.getElementById('character-name').value.trim();
+            const characterClass = document.getElementById('character-class').value;
+            
+            if (!name) {
+                alert('Please enter a character name');
+                return;
+            }
+
             try {
-                // Initialize game
-                await fetch('/api/init_game', { method: 'POST' });
-                
-                // Create character
                 const response = await fetch('/api/create_character', {
                     method: 'POST',
                     headers: {
-                        'Content-Type': 'application/json'
+                        'Content-Type': 'application/json',
                     },
                     body: JSON.stringify({
-                        name: 'Hero',
-                        class: 'Warrior'
+                        name: name,
+                        class: characterClass
                     })
                 });
-                
+
+                const data = await response.json();
                 if (!response.ok) {
-                    const error = await response.json();
-                    throw new Error(error.error || 'Failed to create character');
+                    throw new Error(data.error || 'Failed to create character');
                 }
-                
-                // Update player status
+
+                player = data.character;
+                toggleCharacterCreation();
                 updatePlayerStatus();
+                updateEquipmentDisplay();
+                updateConsole('Character created successfully!');
             } catch (error) {
-                console.error('Error initializing game:', error);
-                alert('Failed to initialize game: ' + error.message);
+                updateConsole(`Error creating character: ${error.message}`);
             }
         }
+
+
 
         async function updatePlayerStatus() {
             try {
@@ -97,60 +302,78 @@
                     throw new Error(data.error || 'Failed to get player status');
                 }
                 
-                document.getElementById('player-name').textContent = data.name;
-                document.getElementById('player-health').textContent = data.health;
-                document.getElementById('player-level').textContent = data.level;
+                playerNameElement.textContent = data.name;
+                playerHealthElement.textContent = data.health;
             } catch (error) {
                 console.error('Error getting player status:', error);
             }
         }
 
-        async function startCombat() {
+        // Handle console command input
+        function handleKeyPress(event) {
+            if (event.key === 'Enter') {
+                sendConsoleCommand();
+            }
+        }
+
+        async function sendConsoleCommand() {
+            const input = document.getElementById('console-input');
+            const command = input.value.trim();
+            
+            if (!command) {
+                return;
+            }
+
+            // Clear input and add command to console
+            input.value = '';
+            addConsoleMessage(CONSOLE_TYPES.COMMAND, command);
+
             try {
-                const response = await fetch('/api/start_combat', {
+                const response = await fetch('/api/console_command', {
                     method: 'POST',
                     headers: {
-                        'Content-Type': 'application/json'
+                        'Content-Type': 'application/json',
                     },
                     body: JSON.stringify({
-                        enemy_name: 'Goblin'
+                        command: command
                     })
                 });
-                
-                if (!response.ok) {
-                    const error = await response.json();
-                    throw new Error(error.error || 'Failed to start combat');
-                }
-                
-                document.getElementById('start-combat').disabled = true;
-                document.getElementById('player-attack').disabled = false;
-                updateEnemyStatus();
-            } catch (error) {
-                console.error('Error starting combat:', error);
-                alert('Failed to start combat: ' + error.message);
-            }
-        }
 
-        async function updateEnemyStatus() {
-            try {
-                const response = await fetch('/api/get_enemy_status');
                 const data = await response.json();
                 
                 if (!response.ok) {
-                    throw new Error(data.error || 'Failed to get enemy status');
+                    throw new Error(data.error || 'Failed to process command');
                 }
-                
-                document.getElementById('enemy-name').textContent = data.name;
-                document.getElementById('enemy-health').textContent = data.health;
+
+                // Add response to console
+                addConsoleMessage(CONSOLE_TYPES.RESPONSE, data.response);
             } catch (error) {
-                console.error('Error getting enemy status:', error);
+                addConsoleMessage(CONSOLE_TYPES.ERROR, error.message);
             }
         }
 
-        async function playerAttack() {
+        // Add message to console with type
+        function addConsoleMessage(type, message) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `console-${type}`;
+            messageDiv.textContent = message;
+            consoleOutputElement.appendChild(messageDiv);
+            consoleOutputElement.scrollTop = consoleOutputElement.scrollHeight;
+        }
+
+        async function lookAround() {
             try {
-                const response = await fetch('/api/player_attack', { method: 'POST' });
+                const response = await fetch('/api/look_around', {
+                    method: 'POST'
+                });
+                
                 const data = await response.json();
+                
+                if (!response.ok) {
+                    throw new Error(data.error || 'Failed to look around');
+                }
+                
+                addConsoleMessage(CONSOLE_TYPES.RESPONSE, data.description);
                 
                 if (!response.ok) {
                     throw new Error(data.error || 'Failed player attack');
