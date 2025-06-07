@@ -47,6 +47,7 @@ def get_player_status():
     if game.current_player:
         return jsonify({
             "name": game.current_player.name,
+            "class": game.current_player.character_class,
             "health": game.current_player.hit_points,
             "level": game.current_player.level,
             "attributes": game.current_player.attributes
