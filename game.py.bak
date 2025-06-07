@@ -1,7 +1,6 @@
 import json
 import os
 import random
-import sys
 from typing import Dict, Any, List, Optional
 from dotenv import load_dotenv
 from groq import Groq
@@ -250,47 +249,12 @@ class Character:
             self.equipped["armor"] = item
         elif item.item_type == "accessory":
             self.equipped["accessories"].append(item)
-
-    def format_status(self) -> str:
-        """Format character status in a readable way."""
-        status = []
-        
-        # Character info
-        status.append("=== Character Info ===")
-        status.append(f"Name: {self.name}")
-        status.append(f"Class: {self.character_class}")
-        status.append(f"Level: {self.level}")
-        status.append(f"HP: {self.hit_points}")
-        status.append("")
-        
-        # Attributes
-        status.append("=== Attributes ===")
-        for attr, value in self.attributes.items():
-            status.append(f"{attr.capitalize()}: {value}")
-        status.append("")
-        
-        # Inventory
-        status.append("=== Inventory ===")
-        if not self.inventory:
-            status.append("Inventory is empty")
         else:
-            for item in self.inventory:
-                status.append(f"- {item}")
-        status.append("")
+            return f"Unknown item type: {item.item_type}"
+            
+        self.inventory.remove(item)
+        return f"Equipped {item.name}"
         
-        # Equipment
-        status.append("=== Equipment ===")
-        status.append(f"Weapon: {self.equipped['weapon'].name if self.equipped['weapon'] else 'None'}")
-        status.append(f"Armor: {self.equipped['armor'].name if self.equipped['armor'] else 'None'}")
-        if self.equipped['accessories']:
-            status.append("Accessories:")
-            for accessory in self.equipped['accessories']:
-                status.append(f"- {accessory.name}")
-        else:
-            status.append("Accessories: None")
-        
-        return "\n".join(status)
-    
     def get_attack_bonus(self) -> int:
         weapon = self.equipped["weapon"]
         if weapon:
@@ -377,9 +341,7 @@ class RPGGame:
                 "context": context
             })
         elif command == "2":
-            if not self.current_player:
-                return "You need to create a character first."
-            return self.current_player.format_status()
+            return self.show_inventory()
         elif command == "3":
             if not self.current_player:
                 return "You need to create a character first."
@@ -387,7 +349,7 @@ class RPGGame:
         elif command == "4":
             if not self.current_player:
                 return "You need to create a character first."
-            return self.current_player.format_status()
+            return self.get_player_status()
         elif command == "5":
             location = self.get_current_location()
             if not location:
@@ -407,8 +369,7 @@ class RPGGame:
                 return "There are no NPCs here to talk to."
             return "Type the name of the NPC you want to talk to (e.g., 'talk to merchant')"
         elif command == "7":
-            print("Thank you for playing! Goodbye!")
-            sys.exit(0)
+            return "Exiting game..."
             
         # Basic commands
         if command in ["look", "l"]:
