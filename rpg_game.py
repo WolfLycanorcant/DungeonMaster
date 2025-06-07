@@ -3,6 +3,7 @@ import os
 from typing import Dict, Any
 from game_objects import Character, Item
 from dotenv import load_dotenv
+from groq import Groq
 
 class RPGGame:
     def __init__(self):
@@ -10,6 +11,8 @@ class RPGGame:
         self.current_player = None
         self.current_enemy = None
         self.combat_mode = False
+        self.groq = None
+        self.initialize_groq()
 
         self.initialize_game_data()
         self.load_rules()
@@ -85,39 +88,45 @@ class RPGGame:
             except Exception as e:
                 print(f"Warning: Could not load {filename} - using default rules")
 
-    def create_prompt(self, user_input: str, context: Dict[str, Any]) -> str:
-        prompt = f"""
-You are an expert Dungeon Master AI running a text-based RPG. Your responses must strictly comply with all official rule documents.
+    def initialize_groq(self):
+        """Initialize Groq client with API key from .env"""
+        load_dotenv()
+        api_key = os.getenv('GROQ_API_KEY')
+        if api_key:
+            self.groq = Groq(api_key=api_key)
 
-===== RULE DOCUMENTS =====
+    def create_prompt_with_sensory_details(self, user_input: str, context: Dict[str, Any], rules: Dict[str, Any]) -> str:
+        """Create a prompt with sensory details and rule compliance"""
+        return f"""
+You are an expert Dungeon Master AI running a text-based RPG. Every response MUST:
+- Comply with all rules from the following JSON files:
+  - rules.json
+  - squad_tactics.json
+  - making_mercs.json
+  - building_worlds.json
+- Maintain game balance and enforce all rule constraints.
+- Describe the scene vividly using sensory perceptions (sight, sound, smell, feel).
+- Mention all relevant NPCs and world objects present.
+- End with a prompt asking the player what they want to do next.
 
+========================= RULES =========================
 📘 rules.json:
-{json.dumps(self.rules.get('rules.json', {}), indent=2)}
-
+{json.dumps(rules.get('rules.json', {}), indent=2)}
 ⚔️ squad_tactics.json:
-{json.dumps(self.rules.get('squad_tactics.json', {}), indent=2)}
-
+{json.dumps(rules.get('squad_tactics.json', {}), indent=2)}
 🧙 making_mercs.json:
-{json.dumps(self.rules.get('making_mercs.json', {}), indent=2)}
-
+{json.dumps(rules.get('making_mercs.json', {}), indent=2)}
 🌍 building_worlds.json:
-{json.dumps(self.rules.get('building_worlds.json', {}), indent=2)}
+{json.dumps(rules.get('building_worlds.json', {}), indent=2)}
 
-===== CURRENT CONTEXT =====
+======================= CONTEXT ========================
 {json.dumps(context, indent=2)}
 
-===== PLAYER ACTION =====
-User said: {user_input}
+==================== PLAYER ACTION =====================
+Player input: {user_input}
 
-===== YOUR INSTRUCTIONS =====
-- ALWAYS follow the rules from all documents.
-- DO NOT invent new rules or change stats/mechanics unless the rules allow it.
-- Maintain game balance, immersive descriptions, and consistency.
-- Respond as if you are the Dungeon Master running this world with full rule compliance.
-
-Begin your narration below:
+==================== YOUR RESPONSE =====================
 """
-        return prompt
 
     def process_input(self, user_input: str, context: Dict[str, Any]) -> str:
         try:
@@ -134,6 +143,12 @@ Begin your narration below:
             elif user_input.startswith("equip"):
                 item_name = user_input.split(" ", 1)[1]
                 return self.equip_item(item_name)
+            elif user_input.startswith("unequip"):
+                slot = user_input.split(" ", 1)[1]
+                return self.unequip_item(slot)
+            elif user_input.startswith("examine"):
+                item_name = user_input.split(" ", 1)[1]
+                return self.examine_item(item_name)
             elif user_input.startswith("go to"):
                 location = user_input[6:].strip()
                 if location in self.locations:
@@ -147,7 +162,7 @@ Begin your narration below:
                 return "That NPC is not here."
             else:
                 if hasattr(self, 'groq') and self.groq:
-                    prompt = self.create_prompt(user_input, context)
+                    prompt = self.create_prompt_with_sensory_details(user_input, context, self.rules)
                     response = self.groq.generate(
                         model="mixtral-8x7b-instruct",
                         messages=[{"role": "user", "content": prompt}],
@@ -248,7 +263,11 @@ Begin your narration below:
         return f"You missed {self.current_enemy.name}!"
 
 def main():
+    # Initialize game and Groq
     game = RPGGame()
+    if not game.groq:
+        print("Warning: Groq API not initialized. Using basic descriptions.")
+    
     starting_items = [
         Item("Short Sword", "weapon", {"bonus": 2, "weight": 2}, stackable=False),
         Item("Leather Armor", "armor", {"bonus": 1, "weight": 3}, stackable=False),
@@ -280,30 +299,116 @@ def main():
 
         print("=" * 80)
         print(f"Current Location: Starting Town")
-        print("Main Menu:\n1. Move to new location\n2. View inventory\n3. Equip item\n4. Unequip item\n5. Examine item\n6. View character info\n7. Look around\n8. Talk to someone\n9. Exit game")
+        
+        # Create context for environment description
+        context = {
+            "current_location": "Starting Town",
+            "player": game.current_player,
+            "location_info": game.locations["Starting Town"],
+            "mission": "Explore the town and gather supplies before venturing into the forest."
+        }
+        
+        # Get environment description from Groq
+        try:
+            if game.groq:
+                prompt = f"""
+You are an expert Dungeon Master AI running a text-based RPG. Describe the current location and mission in an engaging way.
 
-        choice = input("\nEnter your choice (1-9): ")
-        if choice == "1":
+Current Location: {context['current_location']}
+Description: {context['location_info']['description']}
+Exits: {', '.join(context['location_info']['exits'])}
+NPCs: {', '.join(context['location_info']['npcs'])}
+Mission: {context['mission']}
+
+Provide a vivid description of the environment and mission objectives.
+"""
+                response = game.groq.chat.completions.create(
+                    model="mixtral-8x7b",
+                    messages=[{"role": "user", "content": prompt}],
+                    temperature=0.7,
+                    max_tokens=300
+                )
+                print("\n" + response.choices[0].text + "\n")
+            else:
+                print(f"\n{game.locations['Starting Town']['description']}")
+                print("\nMission: Explore the town and gather supplies before venturing into the forest.")
+                print("Available exits:", ", ".join(game.locations['Starting Town']['exits']))
+                print("NPCs present:", ", ".join(game.locations['Starting Town']['npcs']))
+                print()
+        except Exception as e:
+            print(f"\nError generating description: {str(e)}")
+            print(f"\n{game.locations['Starting Town']['description']}")
+            print("\nMission: Explore the town and gather supplies before venturing into the forest.")
+            print("Available exits:", ", ".join(game.locations['Starting Town']['exits']))
+            print("NPCs present:", ", ".join(game.locations['Starting Town']['npcs']))
+            print()
+        # Define menu options as a dictionary
+        menu_options = {
+            "1": "move to new location",
+            "2": "view inventory",
+            "3": "equip item",
+            "4": "unequip item",
+            "5": "examine item",
+            "6": "view character info",
+            "7": "look around",
+            "8": "talk to someone",
+            "9": "exit game",
+            "move": "1",
+            "inventory": "2",
+            "equip": "3",
+            "unequip": "4",
+            "examine": "5",
+            "character": "6",
+            "look": "7",
+            "talk": "8",
+            "exit": "9"
+        }
+
+        # Display equipped items first
+        print("\nEquipped Items:")
+        print("-" * 20)
+        print(f"Weapon: {game.current_player.equipped['weapon'] if game.current_player.equipped['weapon'] else '[Empty]'}")
+        print(f"Armor: {game.current_player.equipped['armor'] if game.current_player.equipped['armor'] else '[Empty]'}")
+        print(f"Accessories: {', '.join(game.current_player.equipped['accessories']) if game.current_player.equipped['accessories'] else '[Empty]'}")
+        print("-" * 20)
+
+        print("\nMain Menu:")
+        print("1. Move to new location")
+        print("2. View inventory")
+        print("3. Equip item")
+        print("4. Unequip item")
+        print("5. Examine item")
+        print("6. View character info")
+        print("7. Look around")
+        print("8. Talk to someone")
+        print("9. Exit game")
+
+        choice = input("\nEnter your choice (1-9) or type the action: ").lower().strip()
+        # Convert choice to number if it's a menu option
+        if choice in menu_options:
+            choice = menu_options[choice]
+        
+        if choice == "1" or choice == "move":
             user_input = input("\nEnter the location you want to move to: ")
-        elif choice == "2":
+        elif choice == "2" or choice == "inventory":
             print(game.show_inventory())
             continue
-        elif choice == "3":
+        elif choice == "3" or choice == "equip":
             item_name = input("\nEnter the name of the item you want to equip: ")
             response = game.equip_item(item_name)
             print("\n", response)
             continue
-        elif choice == "4":
+        elif choice == "4" or choice == "unequip":
             slot = input("\nEnter the slot to unequip (weapon/armor/accessory): ").lower()
             response = game.unequip_item(slot)
             print("\n", response)
             continue
-        elif choice == "5":
+        elif choice == "5" or choice == "examine":
             item_name = input("\nEnter the name of the item to examine: ")
             response = game.examine_item(item_name)
             print("\n", response)
             continue
-        elif choice == "6":
+        elif choice == "6" or choice == "character":
             player = game.current_player
             print("\nPlayer Info:")
             print(f"Name: {player.name}\nClass: {player.character_class}\nLevel: {player.level}\nHP: {player.hit_points}\n")
@@ -311,11 +416,11 @@ def main():
             for attr, val in player.attributes.items():
                 print(f"{attr.capitalize()}: {val}")
             continue
-        elif choice == "7":
+        elif choice == "7" or choice == "look":
             user_input = "look"
-        elif choice == "8":
+        elif choice == "8" or choice == "talk":
             user_input = "talk"
-        elif choice == "9":
+        elif choice == "9" or choice == "exit":
             print("\nThanks for playing!")
             break
         else:
