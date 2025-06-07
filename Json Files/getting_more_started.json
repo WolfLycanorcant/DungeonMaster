@@ -1,0 +1,71 @@
+{
+    "section": "Getting More Started",
+    "referee_requirements": {
+        "items": [
+            "This rulebook (especially Intelligence Matrix, p. 70)",
+            "2-6 other people you know, like, and trust",
+            "Six-sided dice (D6)",
+            "Pencils and notebook or electronic note-taking device"
+        ]
+    },
+    "referee_operations": {
+        "description": "Referee plays as the game world itself",
+        "roles": {
+            "showrunner": {
+                "responsibilities": [
+                    "Maintaining universe consistency",
+                    "Maintaining brisk pacing",
+                    "Setting up story elements"
+                ]
+            },
+            "game_code": {
+                "responsibilities": [
+                    "Generating content",
+                    "Distributing rewards",
+                    "Enforcing rules",
+                    "Providing responsive world"
+                ]
+            }
+        },
+        "player_relations": {
+            "description": "Referee and players work together collaboratively",
+            "roles": {
+                "players": {
+                    "contributions": [
+                        "Acting",
+                        "Writing",
+                        "Directing"
+                    ]
+                },
+                "referee": {
+                    "contributions": [
+                        "World consistency",
+                        "Pacing",
+                        "Content generation",
+                        "Rule enforcement"
+                    ]
+                }
+            },
+            "collaboration": {
+                "description": "Two reactive compounds that tell a whole story when combined",
+                "notes": [
+                    "Nothing in this section is secret from players",
+                    "Players can read this section to understand game mechanics"
+                ]
+            }
+        }
+    },
+    "referee_preparation": {
+        "player_section_familiarity": {
+            "description": "Referee should be familiar with player section",
+            "page_reference": "p. 1"
+        },
+        "player_benefits": {
+            "description": "Players can read this section to better understand game mechanics",
+            "benefits": [
+                "Better understanding of how FIST works",
+                "Better understanding of referee's role"
+            ]
+        }
+    }
+}

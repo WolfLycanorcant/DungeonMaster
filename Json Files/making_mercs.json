@@ -1,0 +1,98 @@
+{
+    "section": "Making Mercs",
+    "character_background": {
+        "description": "A legendary rogue mercenary unit member, caught up in proxy wars and paranormal Cold War secrets",
+        "character_type": "Soldier of fortune who doesn't fit into mainstream society",
+        "abilities": [
+            "Can potentially turn into ghosts",
+            "Can potentially control bees with mind"
+        ]
+    },
+    "character_creation": {
+        "attributes": {
+            "list": ["FORCEFUL", "TACTICAL", "CREATIVE", "REFLEXIVE"],
+            "description": "Represents character's skill level in related challenges",
+            "starting_value": 0
+        },
+        "creation_steps": {
+            "step_1": {
+                "action": "Procure character sheet",
+                "page_reference": "p. 152"
+            },
+            "step_2": {
+                "action": "Choose or roll for traits",
+                "method": "Choose 2 traits or roll 2D666",
+                "page_reference": "p. 39-66"
+            },
+            "step_3": {
+                "action": "Fill out character stats",
+                "details": {
+                    "attributes": {
+                        "starting_value": 0,
+                        "modified_by_traits": true
+                    },
+                    "inventory": {
+                        "notes": "Can carry unlimited items, but only one weapon at a time",
+                        "unarmed_damage": "worst-of-2D6"
+                    },
+                    "armor": {
+                        "starting_value": 0,
+                        "body_armor_limit": 1,
+                        "accessories_limit": "unlimited",
+                        "page_reference": "p. 83"
+                    },
+                    "hp": {
+                        "starting_value": 6,
+                        "description": "Hit points representing damage capacity"
+                    },
+                    "war_dice": {
+                        "starting_value": 0,
+                        "description": "Represents grit, spirit, and luck",
+                        "usage": {
+                            "effect": "+1D6 to any dice roll",
+                            "consumable": true
+                        }
+                    },
+                    "starting_bonus": {
+                        "options": [
+                            "Standard issue item",
+                            "+1D6 MAX HP",
+                            "+1D6 WAR DICE"
+                        ]
+                    }
+                }
+            },
+            "step_4": {
+                "action": "Choose or roll for role",
+                "method": "Choose from roles index or roll D66",
+                "page_reference": "p. 67",
+                "notes": "Cannot choose a role already taken by another player"
+            },
+            "step_5": {
+                "action": "Choose codename",
+                "notes": "Also choose a real name, but keep it secret until dramatic moment"
+            }
+        }
+    },
+    "standard_issue_items": {
+        "roll_method": "1D6 or choose",
+        "items": [
+            {"name": "Balaclava", "effect": "Hides identity"},
+            {"name": "Flashlight", "effect": "Can be used as weapon attachment"},
+            {"name": "Knife", "damage": "1D6 DAMAGE"},
+            {"name": "MRE field rations", "effect": "+1D6 HP, one use"},
+            {"name": "Pistol", "damage": "1D6 DAMAGE"},
+            {"name": "Riot shield", "effect": "1 ARMOR, can equip as weapon"}
+        ]
+    },
+    "emergency_insertion": {
+        "description": "Procedure for creating new character when previous one dies",
+        "deployment_roll": "2D6",
+        "results": {
+            "6_or_less": "Deployment goes wrong somehow",
+            "7_to_9": "Deploy normally",
+            "10_or_above": "Deploy with extra standard issue item",
+            "double_sixes": "As above, plus +3 to first roll"
+        }
+    }
+}

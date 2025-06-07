@@ -1,0 +1,84 @@
+{
+    "section": "Dice Mechanics",
+    "dice_rolling": {
+        "description": "Used for risky actions with uncertain outcomes",
+        "when_to_roll": {
+            "roll": "When action is risky and outcome is uncertain",
+            "no_roll": [
+                "When action can be easily accomplished",
+                "When action is completely impossible"
+            ]
+        },
+        "roll_process": {
+            "step_1": {
+                "description": "Choose an attribute",
+                "attributes": {
+                    "FORCEFUL": "For displays of strength (kicking doors, powerful weapons, intimidation)",
+                    "TACTICAL": "For applications of logic (disguises, hacking, machinery)",
+                    "CREATIVE": "For expressions of will (speeches, bluffing, psychic manipulation)",
+                    "REFLEXIVE": "For feats of agility (dodging, precise weapons, parrying)"
+                }
+            },
+            "step_2": {
+                "description": "Roll the dice",
+                "method": {
+                    "base_roll": "2D6",
+                    "additions": [
+                        "Attribute value",
+                        "WAR DIE (optional, +1D6)"
+                    ]
+                },
+                "results": {
+                    "6_or_below": "Failure - action fails, things go wrong",
+                    "7_to_9": "Partial success - action succeeds with cost/complication",
+                    "10_or_above": "Success - action succeeds without complications",
+                    "double_sixes": "Ultra success - action succeeds with spectacular bonus"
+                }
+            }
+        },
+        "referee_rules": {
+            "description": "Referee-controlled characters don't roll dice",
+            "referee_role": "Narrates things that are about to happen",
+            "player_response": "Players roll dice to react"
+        }
+    },
+    "combat_rules": {
+        "description": "Combat follows same dice rolling mechanics",
+        "combat_types": {
+            "active_combat": {
+                "definition": "Situation where two or more parties are aware and attempting to harm each other",
+                "rules": {
+                    "attacking": {
+                        "roll": "Roll dice to attack",
+                        "success": "Deal weapon damage on success"
+                    },
+                    "defending": {
+                        "roll": "Roll dice to avoid/counter",
+                        "failure": "Always incurs damage in active combat"
+                    }
+                }
+            },
+            "damage_system": {
+                "hp": {
+                    "description": "Hit points representing damage capacity",
+                    "death": "When HP drops to 0"
+                },
+                "armor": {
+                    "description": "Reduces damage taken",
+                    "calculation": "Damage = (Weapon damage) - (Armor bonus)"
+                },
+                "death_rules": {
+                    "description": "No saving throws in war",
+                    "procedure": [
+                        "Log death in character graveyard",
+                        "Create new merc",
+                        "Prepare for emergency insertion"
+                    ]
+                }
+            }
+        },
+        "rules_of_engagement": {
+            "active_combat": "Failing in dangerous situations outside active combat doesn't necessarily incur damage"
+        }
+    }
+}

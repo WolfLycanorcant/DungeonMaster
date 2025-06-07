@@ -1,0 +1,199 @@
+{
+    "section": "Creating Missions",
+    "mission_creation": {
+        "philosophy": {
+            "simplicity": "Being referee is easy",
+            "flexibility": "Designed as Lego kit for brain",
+            "player_input": "Listen to players for input as story develops"
+        },
+        "approach": {
+            "avoid": {
+                "beat_by_beat_planning": "Gain nothing by constraining players to predetermined storyline"
+            },
+            "focus": {
+                "situations": {
+                    "description": "Create situations, not stories or scenes",
+                    "example": {
+                        "premise": "Colonel Kraken runs fortress extracting vital energy",
+                        "structure": {
+                            "building": "Hexagonal with 6 extractors and central office",
+                            "guards": {
+                                "rotation": "Clockwise every 3 hours",
+                                "shifts": "Day and night switch every 12 hours"
+                            },
+                            "rumors": [
+                                "Occultist",
+                                "KGB agent",
+                                "Extractor designer"
+                            ]
+                        }
+                    }
+                },
+                "space_fleshing": {
+                    "tactics": {
+                        "description": "How to approach mission",
+                        "elements": [
+                            "Multiple entrances",
+                            "Spatial awareness",
+                            "In medias res openings"
+                        ]
+                    },
+                    "espionage": {
+                        "description": "Information and social elements",
+                        "elements": [
+                            "NPC interactions",
+                            "Infosec challenges",
+                            "Dangerous information"
+                        ]
+                    },
+                    "action": {
+                        "description": "Catalyzing elements",
+                        "examples": [
+                            "Neural implant networks",
+                            "Sleeping monsters",
+                            "Cliff rappelling"
+                        ]
+                    }
+                }
+            }
+        }
+    },
+    "mission_structure": {
+        "components": {
+            "objective": {
+                "description": "Primary goal for mission completion",
+                "secondary": "Optional secondary objectives"
+            },
+            "reward": {
+                "types": [
+                    "Client rewards",
+                    "Liberated items",
+                    "Prominent allies"
+                ],
+                "format": "Include conditions for clarity"
+            },
+            "consequence": {
+                "description": "Effects if mission fails or ignored",
+                "examples": [
+                    "Natural disasters",
+                    "Supersoldier creation",
+                    "Ecosystem destruction"
+                ]
+            }
+        },
+        "presentation": {
+            "format": "Objective/Reward/Consequence",
+            "tools": [
+                "Index cards",
+                "Post-it notes"
+            ]
+        }
+    },
+    "mission_formats": {
+        "target": {
+            "description": "Outskirts for tactical planning",
+            "middle": "NPC interactions and information",
+            "center": "Challenging battle"
+        },
+        "tunnel": {
+            "description": "Moving vehicle mission",
+            "sections": [
+                "Quiet back entrance",
+                "Middle cars with people",
+                "Front with target"
+            ]
+        },
+        "tower": {
+            "description": "Skyscraper mission",
+            "sections": [
+                "Multiple entrances at bottom",
+                "Corporate intel in middle",
+                "Rooftop action"
+            ]
+        }
+    },
+    "mission_vibe": {
+        "tactical": {
+            "description": "Feelings and sensory experiences",
+            "example": "Watching soldiers from afar with infrared goggles"
+        },
+        "espionage": {
+            "description": "Atmosphere and environment",
+            "examples": [
+                "Nervous characters",
+                "Dark sterile environments"
+            ]
+        },
+        "action": {
+            "description": "Visual and auditory elements",
+            "example": "Cyborg ninja drawing blade"
+        }
+    },
+    "mission_loops": {
+        "description": "Everyday cycles in mission area",
+        "examples": {
+            "guard_patrols": {
+                "description": "Circular patrol routes",
+                "benefits": [
+                    "Shows living area",
+                    "Prompts forgotten elements",
+                    "Gives players options"
+                ]
+            },
+            "hospital_example": {
+                "loops": [
+                    "Central hallway",
+                    "Staff-only area",
+                    "Ventilation shafts",
+                    "Nurse rounds",
+                    "Doctor schedule",
+                    "Cleaning agency"
+                ]
+            }
+        }
+    },
+    "mission_content": {
+        "challenges": {
+            "elements": [
+                "Enemy statblocks",
+                "Boss challenges",
+                "Hazards",
+                "Traps"
+            ]
+        },
+        "opportunities": {
+            "elements": [
+                "Item locations",
+                "CYCLOPS gadgets",
+                "Vehicles",
+                "Collectibles",
+                "NPC allies",
+                "Story items"
+            ]
+        },
+        "randomness": {
+            "tables": [
+                "Enemy encounters",
+                "Events",
+                "Interesting finds"
+            ]
+        }
+    },
+    "tools": {
+        "maps": {
+            "types": [
+                "Hex maps",
+                "Grid maps"
+            ],
+            "page_reference": "p. 149"
+        },
+        "visual_aids": {
+            "examples": [
+                "Permanent marker on paper",
+                "Household objects",
+                "Building blocks",
+                "Toy soldiers"
+            ]
+        }
+    }
+}

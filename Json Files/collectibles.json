@@ -1,0 +1,133 @@
+{
+    "section": "Collectibles",
+    "description": {
+        "definition": "Unique and useful items with effects, qualities, or abilities unlike any other items.",
+        "placement": "Locations should be easily missable and discovered through player initiative.",
+        "discovery": {
+            "narrative_triggers": [
+                "Negotiating with enemies",
+                "Observing strange phenomena",
+                "Exploring unassuming corners",
+                "Following cryptic clues"
+            ],
+            "visual_cues": [
+                "Spikes in paranormal energy",
+                "Dull metallic twinkles",
+                "Unusual ambient sounds",
+                "Strange patterns or symbols"
+            ]
+        },
+        "player_interaction": "Players must decide amongst themselves who gets to keep collectibles when found."
+    },
+    "examples": {
+        "old_number_13": {
+            "name": "Old Number 13",
+            "type": "Consumable",
+            "description": "Dull brown whiskey in a warped glass bottle with a handwritten label.",
+            "effects": {
+                "immediate": {
+                    "trait": "VETERAN",
+                    "max_hp": "+1D6"
+                },
+                "duration": "Until end of mission",
+                "aftermath": {
+                    "hangover_damage": "1D6 at start of next mission"
+                }
+            },
+            "location": {
+                "type": "Dive Bar",
+                "conditions": [
+                    "Available on shelf but not mentioned by bartender",
+                    "Must be ordered directly",
+                    "Ordering a different drink first locks out the collectible"
+                ]
+            }
+        },
+        "morleys": {
+            "name": "Pack of Morleys",
+            "type": "Consumable",
+            "description": "Battered hard pack of cigarettes with a red-and-white label.",
+            "effects": {
+                "immediate": {
+                    "glamour": "Blends in as 'no one' anywhere",
+                    "duration": "Until filter is reached"
+                }
+            },
+            "location": {
+                "type": "FBI Agent's Office",
+                "conditions": [
+                    "Requires thorough search",
+                    "Agent doesn't usually smoke",
+                    "Pack is hidden"
+                ]
+            }
+        },
+        "chrysopoeia_rifle": {
+            "name": "Chrysopoeia Rifle",
+            "type": "Weapon",
+            "description": "Wood-grain FN-FAL with an arcane enchantment converting lead to gold.",
+            "effects": {
+                "base_damage": 3,
+                "special_effect": {
+                    "chance": "2-in-1D6",
+                    "effect": "Converts victims to 24k gold statues"
+                },
+                "magical": {
+                    "name_transfer": "Changes to owner's codename"
+                }
+            },
+            "location": {
+                "type": "Rescue Mission",
+                "conditions": [
+                    "Found with an operative named Midas",
+                    "Transfers ownership upon saving or 'putting to rest' Midas"
+                ]
+            }
+        }
+    },
+    "collectible_types": {
+        "consumables": {
+            "description": "Items that can be used once or have limited uses.",
+            "examples": ["Old Number 13", "Pack of Morleys"]
+        },
+        "weapons": {
+            "description": "Special weapons with unique properties.",
+            "examples": ["Chrysopoeia Rifle"]
+        },
+        "artifacts": {
+            "description": "Ancient or magical items with powerful effects.",
+            "examples": []
+        },
+        "tools": {
+            "description": "Specialized equipment with unique functions.",
+            "examples": []
+        },
+        "documents": {
+            "description": "Important papers or records containing valuable information.",
+            "examples": []
+        }
+    },
+    "discovery_methods": {
+        "direct": {
+            "description": "Items found in literal locations.",
+            "examples": ["Bottom of lake", "Booby-trapped pedestal"]
+        },
+        "narrative": {
+            "description": "Items found through story interactions.",
+            "examples": ["Negotiating with enemies", "Observing phenomena"]
+        },
+        "environmental": {
+            "description": "Items found through exploration.",
+            "examples": ["Dumpster behind gun shop", "Janitor's gift"]
+        }
+    },
+    "mission_completion_bonuses": {
+        "all_collectibles_found": {
+            "description": "If players find all collectibles in a mission.",
+            "possible_rewards": [
+                {"type": "war_dice", "amount": "few extra"},
+                {"type": "hp", "effect": "refilled to maximum"}
+            ]
+        }
+    }
+}

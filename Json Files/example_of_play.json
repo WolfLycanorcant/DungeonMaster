@@ -1,0 +1,114 @@
+{
+    "section": "Example of Play",
+    "game_situation": {
+        "scenario": {
+            "description": "Characters trapped in corridor with booby traps and pursuing enemy soldiers",
+            "objective": "Reach top-secret laboratory to liberate confidential research files",
+            "hazards": [
+                "High-voltage laser grid",
+                "Pursuing enemy soldiers"
+            ]
+        },
+        "characters": [
+            {"name": "ZERO", "traits": ["VETERAN"]},
+            {"name": "SPLICE", "traits": ["DUELIST", "MUTANT"]},
+            {"name": "GATE", "traits": ["CHEF", "SUMMON"]},
+            {"name": "WHIPLASH", "traits": ["ACE", "XENO"]}
+        ]
+    },
+    "gameplay_transcript": {
+        "turn_sequence": [
+            {
+                "character": "ZERO",
+                "action": "Setting up overwatch position",
+                "description": "Kneeling by door jamb, positioning rifle"
+            },
+            {
+                "character": "GATE",
+                "action": "Support position",
+                "description": "Crouching by door, sharpening cleaver"
+            },
+            {
+                "character": "REFEREE",
+                "action": "Describing corridor",
+                "description": "High-voltage laser grid that instantly harms on contact"
+            },
+            {
+                "character": "SPLICE",
+                "action": "Attempting laser grid",
+                "roll": {
+                    "attribute": "REFLEXIVE",
+                    "result": 9,
+                    "outcome": "Partial success",
+                    "complication": "Pursuing soldiers arrive"
+                }
+            },
+            {
+                "character": "GATE",
+                "action": "Attempting to cook",
+                "description": "Discussion about trait requirements",
+                "outcome": "Switching to summoning IRUTHON"
+            },
+            {
+                "character": "ZERO",
+                "action": "Engaging soldiers",
+                "roll": {
+                    "attribute": "FORCEFUL",
+                    "result": 7,
+                    "damage": 3,
+                    "outcome": "Partial success",
+                    "complication": "Grenade thrown"
+                }
+            },
+            {
+                "character": "ZERO",
+                "action": "Disarming grenade",
+                "roll": {
+                    "attribute": "REFLEXIVE",
+                    "result": 7,
+                    "outcome": "Partial success",
+                    "damage": 3
+                }
+            },
+            {
+                "character": "WHIPLASH",
+                "action": "Attempting laser grid",
+                "description": "Deciding to run through for level-up opportunity",
+                "roll": {
+                    "attribute": "FORCEFUL"
+                }
+            }
+        ]
+    },
+    "mechanics_demostrated": {
+        "combat": {
+            "positioning": "Cover and overwatch positions",
+            "damage_calculation": {
+                "attribute_modifiers": true,
+                "armor_reduction": true,
+                "damage_types": ["Physical", "Electric"]
+            },
+            "weapon_use": "Different approaches (spray vs precision)"
+        },
+        "trait_usage": {
+            "CHEF": {
+                "ingredient_requirements": "Only in lived-in places"
+            },
+            "SUMMON": {
+                "example": "IRUTHON (storms)"
+            },
+            "VETERAN": {
+                "effect": "+1 ARMOR"
+            }
+        },
+        "dice_mechanics": {
+            "success_levels": {
+                "6_or_below": "Failure",
+                "7_to_9": "Partial success",
+                "10_or_above": "Success"
+            },
+            "damage_rolls": true,
+            "war_dice_usage": true
+        }
+    }
+}

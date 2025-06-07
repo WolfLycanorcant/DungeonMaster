@@ -1,0 +1,178 @@
+{
+    "section": "Building Worlds",
+    "anti_canon": {
+        "description": "The world of FIST operates on 'anti-canon' principles",
+        "principles": {
+            "truth": "Relative and not set in stone",
+            "worldbuilding": "Develops through play",
+            "tools": "Provided for table to build own world",
+            "reasons": [
+                {
+                    "complexity": "World is too complex and nuanced for single set of facts",
+                    "factors": [
+                        "History written by victors",
+                        "Concepts lost to time",
+                        "CYCLOPS disinformation",
+                        "Mutually exclusive immutable facts"
+                    ]
+                },
+                {
+                    "personal_investment": "Player-created worldbuilding more likely to be personally invested in",
+                    "contrast": "Dry encyclopedia articles less engaging"
+                }
+            ]
+        }
+    },
+    "collaborative_worldbuilding": {
+        "foundation": {
+            "elements": [
+                "Character creation",
+                "Mission creation",
+                "Personal backgrounds",
+                "Character actions",
+                "Adversaries",
+                "Points of interest"
+            ]
+        },
+        "reverse_engineering": {
+            "examples": {
+                "experiments": "Have creators",
+                "aliens": "Have homeworlds",
+                "mercenaries": "Have clients"
+            }
+        },
+        "player_questions": {
+            "importance": "Imperative to ask questions and use answers",
+            "types": [
+                "Character origins",
+                "Past employers",
+                "Mission feelings",
+                "Reasons for actions"
+            ]
+        },
+        "character_examples": {
+            "zero": {
+                "question": "Who ordered Viet Cong POWs executed?",
+                "potential": "Villainous American general as foil"
+            },
+            "splice": {
+                "questions": [
+                    "Remember anyone from MI6 program?",
+                    "Location of laboratory?",
+                    "Other test subjects?"
+                ]
+            },
+            "gate": {
+                "questions": [
+                    "Location of family restaurant?",
+                    "Police knowledge of magic?",
+                    "Spirit origins?",
+                    "Plane visitation?"
+                ]
+            },
+            "whiplash": {
+                "questions": [
+                    "Species details?",
+                    "Galactic criminal charges?",
+                    "Pope involvement?"
+                ]
+            }
+        },
+        "world_integration": {
+            "principle": "Player character knowledge is fair game",
+            "rule": "If character would reasonably know, referee cannot contradict"
+        }
+    },
+    "cylops": {
+        "description": "CYCLOPS organization",
+        "characteristics": {
+            "disinformation": "Specializes in",
+            "impact": "Makes matters worse",
+            "agents": {
+                "description": "FIST agents",
+                "diet": "Mutually exclusive immutable facts"
+            }
+        }
+    },
+    "long_game": {
+        "play_styles": {
+            "one_shot": {
+                "description": "TV show style",
+                "reset": "Status quo resets after each mission"
+            },
+            "campaign": {
+                "description": "Ongoing story with living world",
+                "reacts": "To player decisions"
+            },
+            "sweet_spot": {
+                "description": "Middle ground with CYCLOPS reset button",
+                "memory_wipe": "Mass memory wipe or propaganda campaign",
+                "impact": "Leaves workaday world same, alienates heroes"
+            }
+        },
+        "campaign_evolution": {
+            "linear": {
+                "description": "Pre-determined missions",
+                "format": "Mission-after-mission"
+            },
+            "dynamic": {
+                "description": "Overlapping interests and events",
+                "format": {
+                    "mission_cards": {
+                        "objective": "Objective",
+                        "consequence": "Consequence",
+                        "reward": "Reward"
+                    },
+                    "player_choice": {
+                        "missions": "Self-directed",
+                        "sandbox": "Objective-less play"
+                    }
+                }
+            }
+        }
+    },
+    "factions_and_timelines": {
+        "factions": {
+            "description": "Common-interest groups with power",
+            "examples": [
+                "CIA",
+                "KGB",
+                "Knights Templar"
+            ],
+            "development": {
+                "collaborative": {
+                    "worldbuilding": "Play around with",
+                    "flexibility": "Add to personal lore"
+                },
+                "established": {
+                    "actions": "Portray over time",
+                    "roles": [
+                        "Adversary",
+                        "Ally",
+                        "Client",
+                        "Competitor"
+                    ]
+                }
+            }
+        },
+        "timelines": {
+            "structure": {
+                "simple": "Bullet-list format",
+                "example": [
+                    "Colonel Kraken creates an army of supersoldiers",
+                    "Kraken's army establishes New Atlantis",
+                    "New Atlantis becomes nuclear-armed power",
+                    "New Atlantis starts global thermonuclear war"
+                ]
+            },
+            "usage": {
+                "mission_consequences": "Timeline entries",
+                "combination": {
+                    "multiple": "Concurrent timelines",
+                    "mission_cards": "Choice cards",
+                    "result": "Chaotic, evolving setting"
+                }
+            }
+        }
+    }
+}

@@ -1,0 +1,164 @@
+{
+    "section": "Referee FAQ",
+    "questions": [
+        {
+            "question": "How do I move the spotlight between the players?",
+            "answer": {
+                "approach": "Think of game like a movie",
+                "techniques": {
+                    "cut_away": {
+                        "timing": "Tense times (mid-fight, hanging from cliff)",
+                        "purpose": "Make moving camera part of fun"
+                    },
+                    "screen_time": {
+                        "monitoring": "Pay attention to players not getting screen time",
+                        "solution": "Create relevant challenges"
+                    },
+                    "direct_interaction": "Ask players directly if they need screen time"
+                }
+            }
+        },
+        {
+            "question": "How do I handle partial successes, especially in combat?",
+            "answer": {
+                "approach": "Think of mundane complications",
+                "examples": [
+                    "Slipping groceries",
+                    "Traffic light timing",
+                    "Communication missteps"
+                ],
+                "combat_handling": {
+                    "damage": {
+                        "failure": "Deals damage reliably",
+                        "partial": {
+                            "options": [
+                                "Worse situation following damage",
+                                "Less damage dealt",
+                                "Mutual damage in special cases"
+                            ]
+                        }
+                    },
+                    "player_details": "Always ask for details (e.g., 'swing for the head' vs 'I attack')",
+                    "inspiration": {
+                        "partial_successes_table": {
+                            "page_reference": "p. 147"
+                        }
+                    }
+                }
+            }
+        },
+        {
+            "question": "How do I determine when a mission is complete, and who advances?",
+            "answer": {
+                "objective_setting": "Give clear mission objective during briefing",
+                "completion_criteria": {
+                    "recommendation": "Challenge players to exfiltrate after objective",
+                    "examples": [
+                        "Reach getaway car",
+                        "Leap into helicopter",
+                        "Survive car chase",
+                        "Brave firefight"
+                    ],
+                    "rule_of_thumb": "Declare mission complete when FIST has shaken off enemies"
+                },
+                "advancement": {
+                    "role_discussion": "Go around table after mission to discuss each player's role",
+                    "role_fulfillment": "Advance if actions match role description",
+                    "alternative": "Table voting if players dislike system"
+                }
+            }
+        },
+        {
+            "question": "When do I bend the rules, and how do I make new rulings?",
+            "answer": {
+                "rule_bending": {
+                    "when": "When following rules as-written doesn't make sense",
+                    "example": "Telepathic damage vs ARMOR"
+                },
+                "new_rulings": {
+                    "approach": "Go with what sounds best",
+                    "table_input": "Ask table for fairness and alternative ideas",
+                    "house_rules": {
+                        "note_taking": "Make note of house rules",
+                        "flavor": "Gives game more flavor over time",
+                        "tweaking": "Can be adjusted between sessions"
+                    }
+                }
+            }
+        },
+        {
+            "question": "What kind of dynamic should the referee have with the players?",
+            "answer": {
+                "analogy": "Magician and martial arts master",
+                "referee_role": {
+                    "adversary": {
+                        "neutral_dangerous_systems": true,
+                        "individual_enemies": true,
+                        "large_scale_forces": true
+                    },
+                    "master_analogy": {
+                        "challenge": "Give good time and productive challenge",
+                        "training_approach": {
+                            "no_cruelty_or_pride": true,
+                            "never_pulls_punches": true
+                        }
+                    },
+                    "magician_analogy": {
+                        "deception": "Weave impenetrable deceptions",
+                        "challenge": "Joy in unspoken challenge to audience"
+                    }
+                },
+                "marble_example": {
+                    "description": "Master protecting marble represents referee role",
+                    "approach": "Keep wall strong but not too strong",
+                    "goal": "Push players into flow state with binary choices having third options"
+                }
+            }
+        },
+        {
+            "question": "What is the tone of FIST, and what tropes work best with the game?",
+            "answer": {
+                "tone": {
+                    "description": "Camp and pop-cultural pastiche",
+                    "approach": {
+                        "grim_gritty_serious": "As a joke—but the joke is dead serious",
+                        "earnestness": "Works better when run earnestly"
+                    }
+                },
+                "tropes": {
+                    "sources": [
+                        "Favorite dumb video games",
+                        "Clichéd comic books"
+                    ],
+                    "approach": {
+                        "pull_apart": {
+                            "joy": true,
+                            "reverence": true,
+                            "critical_eye": true
+                        },
+                        "shoot": true
+                    }
+                },
+                "hyperrealism": {
+                    "description": "Everything in FIST is hyperreal",
+                    "examples": [
+                        "Radioactive disability",
+                        "Alien architect hoaxsters",
+                        "Moon landing authenticity"
+                    ]
+                },
+                "playground": {
+                    "destruction": true,
+                    "ideas": true,
+                    "elements": [
+                        "Heightened violence",
+                        "Lurid horror",
+                        "Scenery-chewing",
+                        "Anime-battling",
+                        "Philosophical discussions"
+                    ]
+                }
+            }
+        }
+    ]
+}

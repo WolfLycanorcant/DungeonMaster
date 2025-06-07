@@ -1,0 +1,228 @@
+{
+    "section": "Example Mission",
+    "mission_creation": {
+        "step_1": {
+            "description": "Choosing a starting point",
+            "rolls": {
+                "locations": {
+                    "city": "San Francisco",
+                    "characteristics": [
+                        "Big heist",
+                        "Headline: 'CELEBRITY GIVEN KEY TO CITY'",
+                        "CYCLOPS Surveillance level: None"
+                    ]
+                },
+                "celebrities": {
+                    "character": {
+                        "name": "Yasmin Najjar",
+                        "stats": {
+                            "HP": 2,
+                            "CHOKE": 2
+                        },
+                        "traits": [
+                            "Actor",
+                            "Millionaire chic",
+                            "Has a five step plan for world peace"
+                        ]
+                    }
+                }
+            }
+        },
+        "map": {
+            "name": "MissionExample Map1.png",
+            "description": "Factory layout with tactical points",
+            "key_locations": {
+                "loading_bay": {
+                    "description": "Main entrance and heavy security",
+                    "features": [
+                        "Parked trucks with parasite samples",
+                        "Trigger point for flesh monster"
+                    ]
+                },
+                "laboratory": {
+                    "description": "CYCLOPS scientist meeting area",
+                    "features": [
+                        "Parasite development",
+                        "Test subject holding cells"
+                    ]
+                },
+                "panic_room": {
+                    "description": "Margaux Crown's HQ",
+                    "features": [
+                        "Lead-walled office",
+                        "Keypad lock (code: 0451)"
+                    ]
+                }
+            },
+            "security_positions": {
+                "outposts": 3,
+                "patrol_routes": {
+                    "description": "Ronin Security patrol paths",
+                    "frequency": "Periodic"
+                }
+            }
+        },
+        "step_2": {
+            "description": "Free-associating across the Matrix",
+            "rolls": {
+                "factions": {
+                    "criminal": "Hakka Tong",
+                    "characteristics": [
+                        "Does experiments",
+                        "Iconic: even their enemies respect their work",
+                        "Inventing a new, upgraded form of a drug"
+                    ]
+                },
+                "experiments": {
+                    "enemy": {
+                        "name": "BRAIN JAR ROBOT",
+                        "stats": {
+                            "HP": 9,
+                            "ARMOR": 2
+                        },
+                        "abilities": [
+                            "Hyper-punch (1D6+1 DAMAGE)",
+                            "Seeps bile",
+                            "Shoddily fused to CYCLOPS robot",
+                            "Sweep for explosives",
+                            "Hyper strength"
+                        ]
+                    }
+                }
+            }
+        },
+        "step_3": {
+            "description": "Honing in on a mission",
+            "mission": {
+                "name": "THE OUAGADOUGOU JOB",
+                "details": {
+                    "objective": "Investigate the factory, rescue missing civilians, and remove French forces from the area",
+                    "reward": "Revolutionary contacts have offered FIST a warehouse in Ouagadougou, the Burkinabé capitol, as well as more jobs in the future",
+                    "consequence": "Intel suggests that the bioweapon is unstable and uncontrolled spread is likely due to French mismanagement"
+                }
+            },
+            "location": {
+                "type": "Tropical savanna",
+                "conflict": "Shaky, two claims",
+                "indigenous": "Taking it back",
+                "colonial": "Neocolonial force wants control",
+                "transport": "Transport routes"
+            },
+            "structure": {
+                "type": "Factory",
+                "characteristics": [
+                    "Loose security",
+                    "Owned by a spy",
+                    "Overgrown",
+                    "Avoided at night"
+                ]
+            },
+            "enemies": {
+                "squads": {
+                    "name": "RONIN SECURITY",
+                    "stats": {
+                        "HP": 3,
+                        "ARMOR": 1
+                    },
+                    "equipment": "MAC 10 SMGs (1D6 DAMAGE)",
+                    "traits": [
+                        "Reputation: Rookie",
+                        "Command: CYCLOPS",
+                        "Trigger-happy",
+                        "Think they're protagonists"
+                    ]
+                },
+                "spies": {
+                    "name": "MARGAUX CROWN",
+                    "stats": {
+                        "HP": 6,
+                        "ARMOR": 1
+                    },
+                    "equipment": "MAC 50 pistol (1D6 DAMAGE)",
+                    "traits": [
+                        "Uses real name",
+                        "Crimson lipstick",
+                        "Acrobatics",
+                        "Contortionist skills",
+                        "Parkour"
+                    ]
+                }
+            }
+        }
+    },
+    "mission_elements": {
+        "tactics": {
+            "description": "Burkinabé contact hires FIST to investigate abandoned car factory",
+            "environment": {
+                "location": "Half-mile outside factory",
+                "cover": "Varying amounts in tropical savanna",
+                "road": "Single road used by RONIN SECURITY",
+                "entrances": "Several viable entrances, all well-guarded"
+            }
+        },
+        "espionage": {
+            "description": "Inside factory investigation",
+            "targets": {
+                "scientists": {
+                    "description": "English-speaking CYCLOPS scientists",
+                    "plot": "Artificial flesh-eating parasite for Burkinabé population weakening"
+                },
+                "civilians": {
+                    "status": "Test subjects",
+                    "reason": "Captured for antidote development"
+                }
+            },
+            "security": {
+                "patrols": "RONIN SECURITY HEAVIES periodically patrol",
+                "trucks": "Loading bay with stable parasite samples"
+            }
+        },
+        "action": {
+            "trigger": "Spine-chilling screams from loading bay",
+            "enemy": {
+                "name": "WRITHING MASS OF FLESH",
+                "description": "Fused parasite samples",
+                "behavior": "Barrels through factory halls, attempts to destroy/absorb"
+            }
+        }
+    },
+    "enemy_stats": {
+        "ronin_security": {
+            "merc": {
+                "HP": 3,
+                "equipment": "MAC 10 submachine gun (1D6 DAMAGE)",
+                "armor": "Bulletproof vest (1 ARMOR)",
+                "traits": {
+                    "description": "Romantic, overzealous Frenchmen",
+                    "tactics": "Always shoot first, even when should take cover"
+                }
+            },
+            "heavy": {
+                "HP": 3,
+                "equipment": {
+                    "weapon": "FM 24/29 light machine gun (1D6+1 DAMAGE)",
+                    "armor": "Bulletproof vest (1 ARMOR)",
+                    "helmet": "Riot helmet (1 ARMOR, accessory)",
+                    "grenades": "3 × smoke grenade (one use)"
+                },
+                "traits": {
+                    "description": "Ex-cops with riot training",
+                    "tactics": "Use smoke grenades to flush out enemies"
+                }
+            }
+        },
+        "margaux_crown": {
+            "HP": 6,
+            "equipment": {
+                "weapon": "MAC 50 pistol (1D6 DAMAGE)",
+                "armor": "Bulletproof vest (1 ARMOR)",
+                "special": "Crimson lipstick (poisoned kiss, roll +FRC to stay conscious, one use)"
+            },
+            "traits": {
+                "description": "Charming people-person with light Parisian accent",
+                "intelligence": "Ties to CYCLOPS and DGSE",
+                "motive": "Offer kiss to stop classified info spread"
+            }
+        }
+    }
+}

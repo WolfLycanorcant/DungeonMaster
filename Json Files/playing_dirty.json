@@ -1,0 +1,76 @@
+{
+    "section": "Playing Dirty",
+    "game_philosophy": {
+        "high_lethality": {
+            "description": "War is hell and death is cheap in FIST",
+            "character_position": "Typically outnumbered, outgunned, and underfunded",
+            "combat_approach": "Active combat is never the only option",
+            "mission_success": "Cannot win every fight, must use alternative strategies"
+        },
+        "mercenary_mindset": {
+            "description": "Players encouraged to lie, cheat, and steal",
+            "notes": [
+                "Not to antagonize referee or other players",
+                "Game is unfair",
+                "Completing objectives requires shifting advantage"
+            ]
+        }
+    },
+    "tactical_approaches": {
+        "lying": {
+            "description": "Assuming false identities and deception",
+            "examples": [
+                "Assuming false identity to bypass guard posts",
+                "Using stealth and misdirection",
+                "Bluffing with false threats",
+                "Infiltration under false pretenses"
+            ]
+        },
+        "cheating": {
+            "description": "Creative problem solving and system exploitation",
+            "examples": [
+                "Sabotaging enemy equipment",
+                "Using special abilities to gain advantage",
+                "Coordinating WAR DICE usage with other players",
+                "Thinking outside the box"
+            ]
+        },
+        "stealing": {
+            "description": "On-site procurement of equipment",
+            "examples": [
+                "Taking tools from workers",
+                "Acquiring keys from guards",
+                "Taking weapons from enemies",
+                "Procuring experimental weapons",
+                "Gathering improvised materials"
+            ],
+            "rules": {
+                "item_persistence": "Items carried to mission end persist into next mission",
+                "no_limit": "Not limited to standard issue or trait items"
+            }
+        }
+    },
+    "strength_in_numbers": {
+        "description": "Importance of teamwork and allies",
+        "strategies": {
+            "referee_controlled_characters": {
+                "options": [
+                    "Offering insider information",
+                    "Joining as powerful allies"
+                ]
+            },
+            "conversation_game": {
+                "free_actions": ["Talking"],
+                "strategic_options": [
+                    "Challenging enemy ideology",
+                    "Mapping infiltration strategies",
+                    "Coordinating with teammates"
+                ]
+            },
+            "tactical_edge": {
+                "description": "More people can cover more bases",
+                "flexibility": "Ability to make new operatives for specific challenges"
+            }
+        }
+    }
+}

@@ -1,0 +1,201 @@
+{
+    "section": "Gear",
+    "weapons": {
+        "melee": {
+            "small_blunt": {"damage": 3, "description": "baton, cane, etc."},
+            "large_blunt": {"damage": "1D6", "description": "bat, crowbar, etc."},
+            "small_blade": {"damage": 3, "description": "pocketknife, hatchet, etc."},
+            "large_blade": {"damage": "1D6", "description": "combat knife, axe, etc."},
+            "light_hand": {"damage": 3, "description": "wraps, thick gloves, etc."},
+            "heavy_hand": {"damage": "1D6", "description": "knuckle dusters, etc."}
+        },
+        "ranged": {
+            "small": {"damage": 3, "description": "slingshot, BB gun, etc."},
+            "whip": {"damage": "1D6"},
+            "bow": {"damage": "1D6"},
+            "pistol": {"damage": "1D6"},
+            "machine_pistol": {"damage": "1D6"},
+            "submachine_gun": {"damage": "1D6"},
+            "carbine": {"damage": "1D6"},
+            "hand_cannon": {"damage": "1D6+1"},
+            "bolt_action_rifle": {"damage": "1D6+1"},
+            "semi_auto_rifle": {"damage": "1D6+1"},
+            "assault_rifle": {"damage": "1D6+1"},
+            "break_action_shotgun": {"damage": "1D6+1"},
+            "pump_action_shotgun": {"damage": "1D6+1"},
+            "light_machine_gun": {"damage": "1D6+1"},
+            "sword": {"damage": "1D6+1"},
+            "spear": {"damage": "1D6+1"},
+            "large_axe": {"damage": "1D6+1"},
+            "large_hammer": {"damage": "1D6+1"},
+            "sniper_rifle": {"damage": "1D6+2"},
+            "rocket_launcher": {"damage": "1D6+2"},
+            "heavy_machine_gun": {"damage": "1D6+2"},
+            "heavy_misc": {"damage": "1D6+2", "description": "e.g. railgun, laser"},
+            "energy_blade": {"damage": "1D6+2", "description": "e.g. beam, magic"},
+            "concussion_grenade": {"damage": "1D6"},
+            "frag_grenade": {"damage": "1D6+1"},
+            "small_bomb": {"damage": "1D6+2", "description": "e.g. landmine, pipe"},
+            "large_bomb": {"damage": "2D6", "description": "e.g. C4 setup"},
+            "anomalous_weapon": {"damage": "2D6"},
+            "ultra_shotgun": {"damage": "2D6"},
+            "fubar_blaster": {"damage": "3D6"}
+        }
+    },
+    "armor": {
+        "accessories": {
+            "combat_shield": {"armor": 0},
+            "riot_shield": {"armor": 1},
+            "heavy_riot_shield": {"armor": 2},
+            "helmet": {"armor": 1}
+        },
+        "clothing": {
+            "civilian": {"armor": 0},
+            "standard_fatigues": {"armor": 0},
+            "tactical": {"armor": 1},
+            "bulletproof_vest": {"armor": 1},
+            "exoskeleton_frame": {"armor": 1},
+            "ceramic_plate": {"armor": 2},
+            "power_armor": {"armor": 2}
+        }
+    },
+    "weapon_tags": {
+        "accurate": {"description": "Scoped, sighted, or well-balanced; grants one automatic success when attacking per mission."},
+        "anti_material": {"description": "Deals double DAMAGE to vehicles and structures; cumbersome to carry around."},
+        "alt_fire": {"description": "Has a secondary component or form which also deals damage."},
+        "armor_piercing": {"description": "Attacks ignore ARMOR bonuses granted by physical means."},
+        "bane": {"description": "Deals double DAMAGE to those affected by the chosen material (silver, salt, etc.)."},
+        "collapsible": {"description": "Easily concealed, no matter the size; will never be detected during pat-downs."},
+        "cursed": {"description": "Requires powerful magic to remove; can permanently spend 1D6 MAX HP for guaranteed success."},
+        "customized": {"description": "Deals +1 DAMAGE and has a unique skin; coveted by enemies."},
+        "dummy": {"description": "Appears to be a weapon but is actually a mundane item."},
+        "electrified": {"description": "Deals double DAMAGE to robots and shorts out electronics."},
+        "experimental": {"description": "Roll D66 on weapon tags table for random effect at mission start."},
+        "flashy": {"description": "Can roll +CREATIVE for bombastic attacks."},
+        "grip": {"description": "Cannot be dropped by referee."},
+        "heavy": {"description": "Grants +3 on FORCEFUL rolls involving the weapon."},
+        "hud": {"description": "Scans hostiles and reveals useful facts upon kill."},
+        "ice": {"description": "Makes surfaces slick and deals double DAMAGE to warm-blooded targets."},
+        "incendiary": {"description": "Deals 2 additional DAMAGE to adjacent targets and double to plants."},
+        "indestructible": {"description": "Impervious to all damage."},
+        "light": {"description": "Grants +1 on REFLEXIVE rolls involving the weapon."},
+        "loud": {"description": "Draws attention from nearby enemies."},
+        "lucky": {"description": "Ultra success grants one WAR DIE."},
+        "medical": {"description": "Can deal negative DAMAGE to heal target."},
+        "messy": {"description": "Causes total disintegration of target on ultra success."},
+        "menacing": {"description": "1-in-1D6 chance to cause enemy to flee after kill."},
+        "non_lethal": {"description": "3-in-1D6 chance to knock unconscious on success."},
+        "poisoned": {"description": "Marks target as poisoned; deals DAMAGE next time they're hurt."},
+        "prototype": {"description": "Grants +1 TACTICAL and +TAC to attack rolls."},
+        "quick_draw": {"description": "Always succeeds against enemies drawing weapons."},
+        "remote": {"description": "Can be remotely steered through chutes and around walls."},
+        "ritual": {"description": "Shatters to protect from death once, then disintegrates."},
+        "sapient": {"description": "Communicates by thought; disposition varies."},
+        "shredder": {"description": "Deals double DAMAGE to flesh and reduces ARMOR by 1 on critical hits."},
+        "stun": {"description": "Prevents movement until HP changes."},
+        "tranquilizer": {"description": "5-in-1D6 chance to knock out with vulnerable area targeting."},
+        "unstable": {"description": "Can deal triple DAMAGE once, then explodes for 3D6 nearby."},
+        "valuable": {"description": "Unique and valuable as a bargaining chip."}
+    },
+    "common_items": {
+        "containers": ["1D6 crates", "10 foot chain", "5 gallon bucket", "50 foot rope"],
+        "consumables": ["analgesic", "bag of chips", "beer bottle", "can of soda"],
+        "tools": ["ballpoint pen", "crowbar", "metal file", "superglue"],
+        "personal_items": ["chewing gum", "cigarettes", "cigars", "cosmetics kit"],
+        "documents": ["coupon book", "ID card", "keychain", "wallet (1D6 × $10 inside)"],
+        "electronics": ["cassette player", "cassette tape", "flashlight", "flip lighter"],
+        "accessories": ["hand mirror", "handbag", "house keys", "wristwatch"],
+        "misc": ["gas can", "glass pipe", "thermos", "zip ties"],
+        "medicines": ["laxative"],
+        "weapons": ["heavy hand", "light hand", "small blade", "large blade"]
+    },
+    "vehicles": {
+        "light": {
+            "bike": {"hp": 3, "armor": 0},
+            "hang_glider": {"hp": 3, "armor": 0},
+            "jet_ski": {"hp": 3, "armor": 1},
+            "atv": {"hp": 3, "armor": 2}
+        },
+        "medium": {
+            "small_boat": {"hp": 6, "armor": 1},
+            "motorcycle": {"hp": 6, "armor": 1},
+            "dirtbike": {"hp": 6, "armor": 2},
+            "sandrail": {"hp": 8, "armor": 0},
+            "civilian_car": {"hp": 8, "armor": 1},
+            "civilian_truck": {"hp": 8, "armor": 2}
+        },
+        "heavy": {
+            "armored_car": {"hp": 8, "armor": 3},
+            "race_car": {"hp": 10, "armor": 0},
+            "civilian_plane": {"hp": 10, "armor": 0},
+            "civilian_van": {"hp": 10, "armor": 1},
+            "covered_truck": {"hp": 10, "armor": 2},
+            "amphibious_vehicle": {"hp": 10, "armor": 2},
+            "light_util_vehicle": {"hp": 12, "armor": 1},
+            "civilian_carrier": {"hp": 12, "armor": 1},
+            "gun_truck": {"hp": 12, "armor": 3},
+            "fighter_aircraft": {"hp": 12, "armor": 1},
+            "helicopter": {"hp": 16, "armor": 1},
+            "work_vehicle": {"hp": 16, "armor": 2},
+            "large_boat": {"hp": 16, "armor": 2},
+            "self_propelled_artillery": {"hp": 16, "armor": 3}
+        },
+        "super_heavy": {
+            "heavy_aircraft": {"hp": 18, "armor": 2},
+            "mech_frame": {"hp": 18, "armor": 2},
+            "starfighter": {"hp": 18, "armor": 2},
+            "submarine": {"hp": 18, "armor": 3},
+            "aircraft_carrier": {"hp": 18, "armor": 3},
+            "airship": {"hp": 20, "armor": 0},
+            "commercial_jet": {"hp": 20, "armor": 2},
+            "tank": {"hp": 20, "armor": 4},
+            "battleship": {"hp": 30, "armor": 3},
+            "nuclear_icebreaker": {"hp": 30, "armor": 4},
+            "spaceship": {"hp": 40, "armor": 3},
+            "battle_mech": {"hp": 40, "armor": 4}
+        },
+        "weapons": {
+            "auto_targeting_cannon": {"damage": "2D6"},
+            "side_hazards": {"damage": 3},
+            "homing_missiles": {"damage": "1D6+2", "count": "1D6"},
+            "mounted_gun": {"damage": "1D6+1"},
+            "gunner_seats": {"damage": 0, "count": "1D6"},
+            "front_ram": {"description": "No crash self-damage"},
+            "mounted_heavy_weapon": {"damage": "1D6+2"},
+            "integrated_weapons": {"damage": "1D6", "count": "1D6"},
+            "mounted_grenade_launcher": {"damage": "1D6"},
+            "mine_dropper": {"damage": "2D6", "count": "1D6"},
+            "chemical_weapon": {"damage": "2D6", "description": "to area"}
+        }
+    },
+    "base_upgrades": {
+        "backup": {
+            "description": "FIST gets a backup squad of mercenaries with 0 in all attributes.",
+            "roll_table": {
+                "two_1s": "Squad dies or 1-in-1D6 chance to defect.",
+                "failure": "Mission consequence plays out.",
+                "partial": "Mission complete, but no reward.",
+                "success": "Mission complete with reward.",
+                "two_6s": "As above, plus +1 to any squad attribute."
+            }
+        },
+        "defense": {
+            "description": "Installs security measures that can instantly kill one enemy during base invasions per upgrade."
+        },
+        "expert": {
+            "description": "Hires an on-site expert who can provide additional items before missions.",
+            "examples": ["weaponsmith", "scientist", "doctor"]
+        },
+        "offense": {
+            "description": "Acquires a weapon of mass destruction that can be used once per mission.",
+            "base_damage": "3D6",
+            "damage_per_upgrade": "1D6"
+        },
+        "storage": {
+            "description": "Builds a warehouse or hangar for storing vehicles, hiding fugitives, and containing anomalies."
+        },
+        "support": {
+            "description": "Gains a support agent who can answer 1D6 questions per mission about mission-related information."
+        }
+    }
+}

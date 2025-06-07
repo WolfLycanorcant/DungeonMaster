@@ -1,0 +1,276 @@
+{
+    "section": "Squads",
+    "description": {
+        "general": "Used as a catch-all for any military or paramilitary group smaller than an army.",
+        "purposes": "Often with a specific purpose, speciality, or theme.",
+        "examples": [
+            "Tiny, tight-knit groups of professional hitmen",
+            "Secret government strike teams",
+            "Large-scale established PMCs",
+            "Suggested for CRO teams"
+        ]
+    },
+    "name_generator": {
+        "d66": {
+            "11": "Black Well",
+            "12": "Bleak Hammer",
+            "13": "Bloody Sunrise",
+            "14": "Burn Bright",
+            "15": "CLEAVER",
+            "16": "Cyclone Team",
+            "21": "Devil's Laughter",
+            "22": "Early Risers",
+            "23": "Easy Company",
+            "24": "Funeral in Progress",
+            "25": "Ghost Platoon",
+            "26": "Heaven's Finest",
+            "31": "Hellcat Division",
+            "32": "Icarus Strike Force",
+            "33": "Insurance Policy",
+            "34": "KILL Squad",
+            "35": "Process Interrupt",
+            "36": "Project Vivisect",
+            "41": "Ronin Security",
+            "42": "Shakedown",
+            "43": "Songbird Unit",
+            "44": "Sunset Tiger",
+            "45": "The Archers",
+            "46": "The B-Team",
+            "51": "The Deep Blue",
+            "52": "The Hungry Crew",
+            "53": "The Reapers",
+            "54": "The SOBs",
+            "55": "The Sluggers",
+            "56": "The Yellowjackets",
+            "61": "Three Wise Men",
+            "62": "Tyrfing",
+            "63": "Ugly Duckling",
+            "64": "Upshot",
+            "65": "Want Not",
+            "66": "Zero Regiment"
+        }
+    },
+    "feature_generator": {
+        "d66": {
+            "11": "AI-assisted",
+            "12": "Active camo",
+            "13": "Bad hygiene",
+            "14": "Blood-bonded",
+            "15": "Codewords only",
+            "16": "Disguise artists",
+            "21": "Explosives experts",
+            "22": "Flamethrowers",
+            "23": "Flight capability",
+            "24": "Grappling hooks",
+            "25": "Greedy bastards",
+            "26": "Heavily armored",
+            "31": "Helicopter",
+            "32": "Hurls insults",
+            "33": "In mourning",
+            "34": "Melee only",
+            "35": "Perfectly in sync",
+            "36": "Piercing bullets",
+            "41": "Poisons and gas",
+            "42": "Polyglots",
+            "43": "Religious",
+            "44": "Rocket launchers",
+            "45": "Roller skates",
+            "46": "Secret weapon",
+            "51": "Shotguns/snipers",
+            "52": "Smoke/flashbangs",
+            "53": "So many pouches",
+            "54": "Sound weapons",
+            "55": "Strict morals",
+            "56": "Superstitious",
+            "61": "Telekinetic members",
+            "62": "Telepathic link",
+            "63": "Teleportation tech",
+            "64": "Traitorous",
+            "65": "Trigger-happy",
+            "66": "War buddies"
+        }
+    },
+    "theme_generator": {
+        "d66": {
+            "11": "20's mafiosos, Tommy guns and pinstripe suits",
+            "12": "Accompanied by rainstorms; coats and boots",
+            "13": "All costumed as popular characters",
+            "14": "Animal themed (one per soldier, or all one animal)",
+            "15": "Arthurian knights, medieval armor",
+            "16": "Avid tabletop and wargame enthusiasts",
+            "21": "Bondage gear and team dynamics",
+            "22": "Carnival and/or clown thing going on",
+            "23": "Carts around a large caged creature",
+            "24": "Clearly think they're the protagonists",
+            "25": "Computer nerds, drones and hacking",
+            "26": "Cultists with robes and curved daggers",
+            "31": "Everybody embodies a different base emotion",
+            "32": "Everybody's 'thing' is a deadly sin or holy virtue",
+            "33": "Everyone is fighter-, thief-, or wizard-aligned",
+            "34": "Extremely elaborate Goldberg-esque traps",
+            "35": "Fair and honorable duels",
+            "36": "Followed by a film crew, records everything",
+            "41": "Food truck chefs on the side",
+            "42": "Glam metal hair and makeup",
+            "43": "Goetic demon names, occultism",
+            "44": "Heavily modded battle cyborgs",
+            "45": "Killed and replaced by doppelgängers",
+            "46": "Magicians with light shows and illusions",
+            "51": "Misguided parodies of famous politicians",
+            "52": "Monologuing, hard-boiled detectives",
+            "53": "Musical theatre, sings during fights",
+            "54": "Muzzled like dogs (until they get serious)",
+            "55": "Only uses authentic WW2 uniforms/weapons",
+            "56": "Orange jumpsuits and prison lingo",
+            "61": "Self-serious to the point of parody",
+            "62": "Shouts the names of their special attacks",
+            "63": "Shows up to battles in maximalist drag",
+            "64": "Slasher masks, at least one chainsaw",
+            "65": "Speedrunners that time themselves on missions",
+            "66": "Superhero costumes, mutant powers"
+        }
+    },
+    "reputation_generator": {
+        "1d6": {
+            "1": {
+                "description": "Laughable",
+                "effect": "May be underestimated"
+            },
+            "2": {
+                "description": "Rookie",
+                "effect": "Less combat experience"
+            },
+            "3": {
+                "description": "Respected",
+                "effect": "Trusted by allies"
+            },
+            "4": {
+                "description": "Elite",
+                "effect": "Highly skilled and dangerous"
+            },
+            "5": {
+                "description": "Feared",
+                "effect": "Strike terror in enemies"
+            },
+            "6": {
+                "description": "None—too stealthy",
+                "effect": "Unknown to most"
+            }
+        }
+    },
+    "command_generator": {
+        "1d6": {
+            "1": {
+                "description": "Agency (p. 108)",
+                "type": "Government",
+                "alignment": "Lawful"
+            },
+            "2": {
+                "description": "Corporation (p. 109)",
+                "type": "Business",
+                "alignment": "Neutral"
+            },
+            "3": {
+                "description": "Criminals (p. 110)",
+                "type": "Illegal",
+                "alignment": "Chaotic"
+            },
+            "4": {
+                "description": "Insurgents (p. 112)",
+                "type": "Rebel",
+                "alignment": "Chaotic"
+            },
+            "5": {
+                "description": "CYCLOPS",
+                "type": "Government",
+                "alignment": "Lawful"
+            },
+            "6": {
+                "description": "Mercenaries",
+                "type": "Independent",
+                "alignment": "Neutral"
+            }
+        }
+    },
+    "example_squads": {
+        "cleaver_team": {
+            "name": "CLEAVER",
+            "feature": "Helicopter",
+            "theme": "Computer nerds, drones and hacking",
+            "reputation": "Elite",
+            "command": "CYCLOPS",
+            "description": "A CYCLOPS cyber warfare team specializing in drone operations.",
+            "equipment": {
+                "vehicles": [
+                    "Helicopter",
+                    "Drone swarm"
+                ],
+                "weapons": [
+                    "Cyber rifles",
+                    "EMP grenades"
+                ],
+                "gear": [
+                    "Hacking tools",
+                    "Surveillance drones"
+                ]
+            },
+            "tactics": {
+                "primary": "Electronic warfare",
+                "secondary": "Aerial support",
+                "special": "Drone swarm attacks"
+            }
+        },
+        "the_reapers": {
+            "name": "The Reapers",
+            "feature": "Shotguns/snipers",
+            "theme": "Musical theatre, sings during fights",
+            "reputation": "Feared",
+            "command": "Criminals",
+            "description": "A feared criminal squad that combines deadly force with theatrical flair.",
+            "equipment": {
+                "vehicles": [
+                    "Stealth van"
+                ],
+                "weapons": [
+                    "High-powered sniper rifles",
+                    "Custom shotguns"
+                ],
+                "gear": [
+                    "Stage makeup",
+                    "Costumes"
+                ]
+            },
+            "tactics": {
+                "primary": "Sniper support",
+                "secondary": "Close-quarters combat",
+                "special": "Musical distractions"
+            }
+        },
+        "black_well": {
+            "name": "Black Well",
+            "feature": "AI-assisted",
+            "theme": "Heavily modded battle cyborgs",
+            "reputation": "None—too stealthy",
+            "command": "Agency",
+            "description": "A secret agency squad of cybernetically enhanced soldiers.",
+            "equipment": {
+                "vehicles": [
+                    "Stealth drone"
+                ],
+                "weapons": [
+                    "Smart rifles",
+                    "Cybernetic claws"
+                ],
+                "gear": [
+                    "AI implants",
+                    "Stealth armor"
+                ]
+            },
+            "tactics": {
+                "primary": "Stealth operations",
+                "secondary": "Cyber warfare",
+                "special": "AI-enhanced combat"
+            }
+        }
+    }
+}

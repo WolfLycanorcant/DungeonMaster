@@ -1,0 +1,122 @@
+{
+    "section": "Rules",
+    "game_overview": {
+        "premise": "FIST is a game where players portray paranormal mercenaries in a Cold War setting, focusing on unconventional characters who prioritize personal values over profit. The game world is an ongoing conversation between players and the referee.",
+        "gameplay": {
+            "missions": "Players deploy their characters on missions involving espionage, problem-solving, and combat.",
+            "world_building": "Between missions, players contribute facts and make choices about the game world's direction.",
+            "playstyle": "The story exists as an ongoing conversation between players and the referee, treating the game world as real and acting accordingly."
+        }
+    },
+    "character_creation": {
+        "starting_attributes": {
+            "attributes": ["FRC", "TAC", "CRE", "RFX"],
+            "value": 0
+        },
+        "starting_stats": {
+            "armor": 0,
+            "war_dice": 0,
+            "max_hp": 6
+        },
+        "required_items": {
+            "traits": 2,
+            "role": "unique",
+            "bonus": [
+                "1D6 additional MAX HP",
+                "1D6 WAR DICE",
+                "standard issue item"
+            ]
+        },
+        "character_identity": {
+            "codename": "required",
+            "real_name": "known only to player"
+        }
+    },
+    "core_mechanics": {
+        "dice_rolling": {
+            "system": "2D6 + attribute",
+            "outcomes": {
+                "6-": "Failure",
+                "7-9": "Partial Success",
+                "10": "Success",
+                "double_6s": "Ultra Success"
+            }
+        },
+        "war_dice": {
+            "description": "Players can spend one WAR DIE to add +1D6 to any dice roll in the game.",
+            "referee_use": "Referee never rolls dice for NPCs, only for random behavior, content, and stats."
+        }
+    },
+    "combat": {
+        "damage_system": {
+            "damage_calculation": "DAMAGE - ARMOR = HP loss",
+            "death_condition": "0 HP",
+            "active_combat": "Players must avoid active combat through stealth, tricks, and tactical retreats"
+        },
+        "combat_actions": "Players should avoid hogging the spotlight with combat actions"
+    },
+    "items": {
+        "wealth": "FIST has no money system; wealth comes from powerful and valuable items.",
+        "item_types": {
+            "weapons": {
+                "holdout": "3 DAMAGE",
+                "light": "1D6 DAMAGE",
+                "medium": "1D6+1 DAMAGE",
+                "heavy": "1D6+2 DAMAGE",
+                "anomalous": "2D6 or more DAMAGE"
+            },
+            "armor": {
+                "light": "1 ARMOR",
+                "heavy": "2 ARMOR",
+                "unusual": "3 ARMOR or more"
+            }
+        }
+    },
+    "advancement": {
+        "criteria": "Act according to your role during missions.",
+        "rewards": [
+            "New trait",
+            "+1D6 MAX HP",
+            "+1D6 WAR DICE"
+        ]
+    },
+    "optional_rules": {
+        "abstract_ammo": {
+            "description": "Ranged weapons have AMMO stat set to 6 at mission start.",
+            "mechanics": "Roll 1D6: if higher than AMMO, ammo depleted; if lower, deal damage and decrease AMMO by 1"
+        },
+        "languages": {
+            "native": "plus number of additional languages equal to CRE or TAC",
+            "encumbrance": "MAX items = MAX HP + FOR or RFX"
+        },
+        "advantage": {
+            "situational": {
+                "advantage": "+2 bonus",
+                "disadvantage": "-2 penalty"
+            },
+            "assistance": "+1 per assisting player, up to number of different ways they help"
+        }
+    },
+    "mission_generator": {
+        "tables": {
+            "dossier": ["Accelerate human evolution", "Access another planet", "Birth a race of super-soldiers", "Breach an anomalous zone"],
+            "enemy": ["A coalition of revenants", "A crew of amateur criminals", "A CYCLOPS foot soldier battalion", "A globe-trotting spy"],
+            "consequence": ["Allow them to evade taxes", "Awaken a forgotten god", "Bankrupt a corporation", "Be used to justify new laws"],
+            "twist": ["A divine entity is interfering", "A double agent holds a high position", "A FIST agent gone MIA surfaces working for them"]
+        }
+    },
+    "cyclops": {
+        "description": "CYCLOPS is a totalitarian intelligence agency that maintains the status quo by suppressing paranormal and conspiracy elements.",
+        "cros": {
+            "description": "CYCLOPS Recon Operations are powerful counterparts to FIST with special powers.",
+            "power_levels": {
+                "easy": "3 HP, 0 ARMOR, 3 DAMAGE",
+                "medium": "3 HP, 1 ARMOR, 1D6 DAMAGE",
+                "hard": "6 HP, 1 ARMOR, 1D6+1 DAMAGE",
+                "extreme": "9 HP, 2 ARMOR, 1D6+2 DAMAGE",
+                "impossible": "12 HP, 2 ARMOR, 2D6 DAMAGE",
+                "nightmare": "18 HP, 3 ARMOR, 3D6 DAMAGE"
+            }
+        }
+    }
+}

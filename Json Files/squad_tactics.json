@@ -1,0 +1,104 @@
+{
+    "section": "Squad Tactics",
+    "emergency_insertion": {
+        "description": "Procedure for joining the mission after character death",
+        "procedure": {
+            "while_mission_continues": "Create new operative and describe insertion method",
+            "referee_approval": "Wait for referee to clear for entry",
+            "insertion_roll": {
+                "dice": "2D6",
+                "page_reference": "p. 2",
+                "results": {
+                    "6_or_less": "Deployment goes wrong somehow",
+                    "7_to_9": "Deploy normally",
+                    "10_or_above": "Deploy with extra standard issue item",
+                    "double_sixes": "As above, plus +3 to first roll"
+                }
+            }
+        }
+    },
+    "rendezvous_signal": {
+        "description": "Team safety mechanism available once per mission",
+        "activation": {
+            "referee_response": {
+                "description": "Describes nearby rendezvous point with obstacles",
+                "point_characteristics": [
+                    "Out-of-the-way",
+                    "Easily defensible",
+                    "Stocked with common supplies"
+                ]
+            },
+            "bonuses": [
+                {
+                    "name": "REST",
+                    "effect": "Recover 1D6 HP"
+                },
+                {
+                    "name": "RESTOCK",
+                    "effect": "Refill one limited-use item"
+                },
+                {
+                    "name": "INTEL",
+                    "effect": "Receive one useful fact about the mission"
+                }
+            ]
+        }
+    },
+    "tactical_infinity": {
+        "description": "Players can try any tactic to solve any problem",
+        "notes": [
+            "Game mechanics provide support and context",
+            "Rules are intentionally incomplete to allow for infinite possibility space",
+            "Players encouraged to think outside the box"
+        ]
+    },
+    "technical_jargon": {
+        "attributes": {
+            "abbreviations": {
+                "FORCEFUL": "FRC",
+                "TACTICAL": "TAC",
+                "CREATIVE": "CRE",
+                "REFLEXIVE": "RFX"
+            }
+        },
+        "dice_rolling": {
+            "d66": {
+                "description": "Roll two D6 in specific order",
+                "example": "Roll of 2 and 4 = 24"
+            },
+            "d666": {
+                "description": "Roll three D6 in specific order",
+                "example": "Roll of 5, 2, 1 = 521"
+            }
+        },
+        "probability": {
+            "x_in_1d6": {
+                "description": "Roll 1D6, treat as true if result ≤ X, false if > X"
+            }
+        },
+        "dice_modifiers": {
+            "best_of_xd6": "Roll XD6 and drop lowest die",
+            "worst_of_xd6": "Roll XD6 and drop highest die"
+        },
+        "item_types": {
+            "limited_use": {
+                "description": "Items with limited uses",
+                "notes": [
+                    "Unavailable when uses exhausted",
+                    "Remain in inventory"
+                ]
+            },
+            "consumable": {
+                "description": "Items usable once",
+                "notes": [
+                    "Gone forever after use",
+                    "Can be found again"
+                ]
+            }
+        },
+        "character_types": {
+            "PC": "Player Character",
+            "NPC": "Non-Player Character"
+        }
+    }
+}

@@ -1,0 +1,92 @@
+{
+    "section": "Ongoing Games",
+    "mission_structure": {
+        "description": "Campaign framed as series of single-session missions",
+        "mission_types": {
+            "paid_jobs": {
+                "description": "Typical missions with payment",
+                "notes": "Just a framing device, supply costs not tracked"
+            },
+            "unpaid_missions": {
+                "reasons": [
+                    "Personal vendettas",
+                    "Asset acquisition",
+                    "Making amends"
+                ]
+            },
+            "plot_structure": {
+                "options": [
+                    "Part of overarching plot",
+                    "One-off jobs",
+                    "Both paid and personal missions"
+                ]
+            }
+        }
+    },
+    "character_progression": {
+        "starting_conditions": {
+            "hp": "Full HP",
+            "items": {
+                "limited_use": "Refilled",
+                "trait_granted": "Replaced",
+                "standard_issue": "Returned",
+                "other": "Carry over between missions, lost if left behind"
+            },
+            "war_dice": {
+                "description": "Single-use, don't refill"
+            }
+        },
+        "advancement": {
+            "trigger": "Acting according to role",
+            "role_changes": {
+                "description": "Can choose new role between missions when natural closure reached",
+                "narration": "Encouraged to narrate how new role fits character"
+            },
+            "rewards": [
+                "New trait",
+                "+1D6 MAX HP",
+                "+1D6 WAR DICE"
+            ],
+            "trait_customization": {
+                "description": "Players encouraged to narrate origin of new traits",
+                "examples": [
+                    "ILLUSION trait from sensory deprivation tank",
+                    "ILLUSION trait from holographic projection drones",
+                    "BARD as warrior-poet",
+                    "PARKOUR with golf club"
+                ]
+            }
+        }
+    },
+    "world_building": {
+        "global_politics": {
+            "referee_role": "Maintain fictional world responding to player actions",
+            "consequences": {
+                "example": "Witnessing assassination of British politician likely leads to MI6 harassment",
+                "notes": [
+                    "FIST not well-liked by intelligence community",
+                    "Unlikely to be hired directly by governments/corporations",
+                    "Rogue ultrahuman actors seen as risk to status quo"
+                ]
+            }
+        },
+        "anti_canon": {
+            "description": "No one correct FIST game world",
+            "book_content": {
+                "status": "Tools and seasonings, not hard truths",
+                "examples": [
+                    "Statements about setting",
+                    "Implied world details"
+                ]
+            },
+            "table_world": {
+                "description": "World created through roleplay is more real than book content",
+                "examples": [
+                    "'This is worse than the Budapest job'",
+                    "'You know, I helped JFK slay a vampire'",
+                    "'My character is from Mars'"
+                ]
+            }
+        }
+    }
+}

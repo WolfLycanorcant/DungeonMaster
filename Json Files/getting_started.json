@@ -1,0 +1,28 @@
+{
+    "section": "Getting Started",
+    "required_items": [
+        "This rulebook",
+        "2-6 other people you know, like, and trust",
+        "Six-sided dice (D6)",
+        "Communal copies of traits and roles indexes (pages 39-69)",
+        "Character sheet for each player (page 152)",
+        "Paper and pencils"
+    ],
+    "game_mechanics": {
+        "play_style": {
+            "description": "FIST functions like a conversation between players and the referee",
+            "referee_role": "Narrates environment, characters, and story",
+            "player_actions": [
+                "Asking referee for details",
+                "Talking to encountered characters",
+                "Narrating own actions in the fictional world"
+            ],
+            "resolution_mechanism": "Rolling dice for uncertain outcomes"
+        },
+        "game_structure": {
+            "complexity": "Light on bookkeeping and number-crunching",
+            "turn_structure": "Natural conversation flow",
+            "player_focus": "Players take turns in spotlight describing actions"
+        }
+    }
+}

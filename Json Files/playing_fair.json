@@ -1,0 +1,125 @@
+{
+    "section": "Playing Fair",
+    "game_theory": {
+        "description": "Design philosophy behind FIST",
+        "comparison": {
+            "playground_gunfight": {
+                "elements": [
+                    "Sensory-based gameplay",
+                    "Common understanding of rules",
+                    "Physical interaction"
+                ]
+            },
+            "roleplaying_game": {
+                "elements": [
+                    "Imaginary context",
+                    "Narrative-based gameplay",
+                    "Referee narration"
+                ]
+            }
+        }
+    },
+    "referee_pillars": {
+        "trust": {
+            "description": "Foundation of roleplaying",
+            "player_referee_relationship": {
+                "referee_to_players": {
+                    "responsibilities": [
+                        "Be fair",
+                        "Be knowledgeable",
+                        "Be clear",
+                        "Be consistent"
+                    ]
+                },
+                "players_to_referee": {
+                    "responsibilities": [
+                        "Approach world boldly",
+                        "Be clever",
+                        "Act in good faith"
+                    ]
+                }
+            },
+            "importance": {
+                "description": "Maintains structure of gameplay",
+                "examples": [
+                    "Common understanding of rules",
+                    "Consistent world behavior"
+                ]
+            }
+        },
+        "chance": {
+            "description": "Abstracts complex decision-making",
+            "purposes": [
+                "Handles mental heavy lifting",
+                "Resolves complex matters",
+                "Suspends disbelief",
+                "Increases fairness",
+                "Reduces prep work"
+            ],
+            "examples": [
+                "Combat resolution",
+                "Injury outcomes",
+                "Body language interpretation",
+                "Piloting challenges"
+            ],
+            "tools": {
+                "dice_rolls": true,
+                "intelligence_matrix": {
+                    "page_reference": "p. 70",
+                    "purpose": "Game prep alternative"
+                }
+            }
+        },
+        "rules": {
+            "description": "Seasoning for gameplay",
+            "functions": {
+                "mental_heavy_lifting": {
+                    "examples": [
+                        "When to invoke chance",
+                        "Odds calculation",
+                        "Special abilities"
+                    ]
+                },
+                "pacing": {
+                    "description": "Hand-waving complex questions",
+                    "example": "Genre conventions replacing detailed knowledge"
+                }
+            },
+            "types": {
+                "explicit": {
+                    "description": "Clear game mechanics",
+                    "examples": [
+                        "Dice rolling",
+                        "Combat rules",
+                        "Attribute system"
+                    ]
+                },
+                "implicit": {
+                    "description": "Advisory and setting information",
+                    "examples": [
+                        "Genre conventions",
+                        "Setting expectations",
+                        "Common knowledge"
+                    ]
+                }
+            }
+        }
+    },
+    "game_design": {
+        "genre_mix": {
+            "description": "Action-science-fantasy-horror pastiche",
+            "purpose": {
+                "description": "Genre conventions replace mental heavy lifting",
+                "example": "Red barrels always explode"
+            }
+        },
+        "mental_efficiency": {
+            "description": "Reducing cognitive load",
+            "methods": [
+                "Genre conventions",
+                "Common knowledge",
+                "Implicit rules"
+            ]
+        }
+    }
+}

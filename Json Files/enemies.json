@@ -1,0 +1,326 @@
+{
+    "section": "Enemies",
+    "enemy_difficulties": {
+        "easy": {
+            "description": "e.g. civilians, animals, federal agents",
+            "stats": {"hp": 3, "armor": 0, "damage": 3}
+        },
+        "medium": {
+            "description": "e.g. soldiers, cops, security guards",
+            "stats": {"hp": 3, "armor": 1, "damage": "1D6"}
+        },
+        "hard": {
+            "description": "e.g. combat androids, elite soldiers",
+            "stats": {"hp": 6, "armor": 1, "damage": "1D6+1"}
+        },
+        "extreme": {
+            "description": "e.g. evil spirits, alien monsters",
+            "stats": {"hp": 9, "armor": 2, "damage": "1D6+2"}
+        },
+        "impossible": {
+            "description": "e.g. cyborg agents, demigods",
+            "stats": {"hp": 12, "armor": 2, "damage": "2D6"}
+        },
+        "nightmare": {
+            "description": "e.g. mutant hulks, arch-demons",
+            "stats": {"hp": 18, "armor": 3, "damage": "3D6"}
+        }
+    },
+    "premade_enemies": {
+        "amateur_terrorist": {
+            "page": 125,
+            "difficulty": "easy",
+            "group_size": "1D6 appear"
+        },
+        "antarean_warpriest": {
+            "page": 125,
+            "difficulty": "extreme"
+        },
+        "beat_cop": {
+            "page": 125,
+            "difficulty": "medium"
+        },
+        "bio_botflies": {
+            "page": 125,
+            "difficulty": "easy",
+            "group_size": "3 appear"
+        },
+        "bounty_hunter": {
+            "page": 125,
+            "difficulty": "medium"
+        },
+        "bughog": {
+            "page": 125,
+            "difficulty": "medium"
+        },
+        "cyclops_goon": {
+            "page": 126,
+            "difficulty": "medium"
+        },
+        "cyclops_heavy_trooper": {
+            "page": 126,
+            "difficulty": "hard"
+        },
+        "cyclops_specialist": {
+            "page": 126,
+            "difficulty": "hard"
+        },
+        "closet_fascist": {
+            "page": 127,
+            "difficulty": "medium"
+        },
+        "cyborg_ninja": {
+            "page": 128,
+            "difficulty": "hard"
+        },
+        "demon_cur": {
+            "page": 129,
+            "difficulty": "medium"
+        },
+        "enhanced_supersoldier": {
+            "page": 128,
+            "difficulty": "hard"
+        },
+        "federal_agent": {
+            "page": 128,
+            "difficulty": "medium"
+        },
+        "gamma_stain": {
+            "page": 128,
+            "difficulty": "medium"
+        },
+        "giant_snake": {
+            "page": 128,
+            "difficulty": "medium"
+        },
+        "grey_observer": {
+            "page": 128,
+            "difficulty": "medium"
+        },
+        "hit_droid": {
+            "page": 128,
+            "difficulty": "medium"
+        },
+        "ikara_queen_of_sea": {
+            "page": 129,
+            "difficulty": "nightmare",
+            "is_boss": true
+        },
+        "international_spy": {
+            "page": 129,
+            "difficulty": "medium"
+        },
+        "kandahar_giant": {
+            "page": 129,
+            "difficulty": "hard"
+        },
+        "local_guerilla": {
+            "page": 130,
+            "difficulty": "medium"
+        },
+        "mule_frame": {
+            "page": 130,
+            "difficulty": "hard"
+        },
+        "mariann_apparition": {
+            "page": 130,
+            "difficulty": "medium"
+        },
+        "mechagator": {
+            "page": 130,
+            "difficulty": "hard"
+        },
+        "mobile_platform_canticle": {
+            "page": 130,
+            "difficulty": "nightmare",
+            "is_boss": true
+        },
+        "nightwalker": {
+            "page": 130,
+            "difficulty": "medium"
+        },
+        "pacific_theater_ghost": {
+            "page": 131,
+            "difficulty": "medium"
+        },
+        "pirate_hind": {
+            "page": 131,
+            "difficulty": "hard"
+        },
+        "rampant_esper": {
+            "page": 131,
+            "difficulty": "hard"
+        },
+        "scorpion_mine": {
+            "page": 131,
+            "difficulty": "medium"
+        },
+        "security_contractor": {
+            "page": 131,
+            "difficulty": "medium"
+        },
+        "serial_killer": {
+            "page": 131,
+            "difficulty": "medium"
+        },
+        "sewer_beast": {
+            "page": 132,
+            "difficulty": "medium"
+        },
+        "unfrozen_osteomorph": {
+            "page": 132,
+            "difficulty": "medium"
+        },
+        "writhing_mass_of_flesh": {
+            "page": 132,
+            "difficulty": "nightmare",
+            "is_boss": true
+        }
+    },
+    "npcs": {
+        "arpnet_expert": {"page": 133},
+        "atf_magnet": {"page": 133},
+        "alpha_class_ai": {"page": 133},
+        "arms_dealer": {"page": 133},
+        "bounty_clerk": {"page": 133},
+        "cqc_expert": {"page": 133},
+        "cyclops_archivist": {"page": 134},
+        "cyclops_plant": {"page": 134},
+        "cyclops_scientist": {"page": 134},
+        "corrupt_accountant": {"page": 135},
+        "doctor_stigmata": {"page": 135},
+        "galt": {"page": 135},
+        "info_broker": {"page": 136},
+        "k9_unit": {"page": 136},
+        "libra_sun": {"page": 136},
+        "living_prophecy": {"page": 136},
+        "lost_angel": {"page": 136},
+        "man_from_taured": {"page": 136},
+        "man_in_black": {"page": 137},
+        "masterless_robot": {"page": 137},
+        "murder_victim": {"page": 137},
+        "narco_submarine": {"page": 138},
+        "private_escort": {"page": 138},
+        "public_servant": {"page": 138},
+        "puppet_sensei": {"page": 138},
+        "rebuilt_survivor": {"page": 138},
+        "scurvy_dog": {"page": 123},
+        "serum_inventor": {"page": 139},
+        "starchild": {"page": 139},
+        "street_racer": {"page": 139},
+        "talking_motorcycle": {"page": 139},
+        "test_subject": {"page": 139},
+        "transhumanist": {"page": 139},
+        "transport_manager": {"page": 140},
+        "ultrahuman_liberationist": {"page": 140},
+        "whistleblower": {"page": 140}
+    },
+    "hazards": {
+        "dangerous": {
+            "banana_peels": "1D6 DAMAGE",
+            "bat_swarms": "1D6 DAMAGE",
+            "broken_glass": "1D6 DAMAGE",
+            "carnivorous_plants": "1D6 DAMAGE",
+            "chaff_field": "1D6 DAMAGE",
+            "conveyor_belts": "1D6 DAMAGE",
+            "crusher_pistons": "1D6 DAMAGE",
+            "dangerously_cold": "1D6 DAMAGE",
+            "dangling_icicles": "1D6 DAMAGE",
+            "deep_holes": "1D6 DAMAGE",
+            "extreme_heat": "1D6 DAMAGE",
+            "falling_rocks": "1D6 DAMAGE",
+            "hungry_piranhas": "1D6 DAMAGE",
+            "icy_patches": "1D6 DAMAGE",
+            "lightning_strikes": "1D6 DAMAGE",
+            "loose_footholds": "1D6 DAMAGE",
+            "low_gravity": "1D6 DAMAGE",
+            "molten_lava": "1D6 DAMAGE",
+            "natural_gas_leak": "1D6 DAMAGE",
+            "poisonous_flora": "1D6 DAMAGE",
+            "radiation_leak": "1D6 DAMAGE",
+            "raging_wildfire": "1D6 DAMAGE",
+            "spilled_oil": "1D6 DAMAGE",
+            "steam_jets": "1D6 DAMAGE",
+            "tar_pits": "1D6 DAMAGE",
+            "wasp_nests": "1D6 DAMAGE",
+            "wet_quicksand": "1D6 DAMAGE"
+        },
+        "non_dangerous": {
+            "fire_ants": "no DAMAGE",
+            "heavy_smoke": "no DAMAGE",
+            "laughing_gas": "no DAMAGE",
+            "metal_detectors": "no DAMAGE",
+            "retinal_scanners": "no DAMAGE",
+            "snake_pits": "no DAMAGE",
+            "security_cameras": "no DAMAGE"
+        }
+    },
+    "traps": {
+        "mechanical": {
+            "ankle_loop_snare": "1D6 DAMAGE",
+            "bear_traps": "1D6 DAMAGE",
+            "buzz_saws": "1D6 DAMAGE",
+            "crusher_ceiling": "1D6 DAMAGE",
+            "door_bomb": "1D6 DAMAGE",
+            "electric_floor": "1D6 DAMAGE",
+            "falling_cages": "1D6 DAMAGE",
+            "floor_trapdoors": "1D6 DAMAGE",
+            "guns_rigged_to_fire": "1D6 DAMAGE",
+            "net_snare": "1D6 DAMAGE",
+            "poison_dart_launchers": "1D6 DAMAGE",
+            "rolling_boulder": "1D6 DAMAGE",
+            "spike_traps": "1D6 DAMAGE",
+            "swinging_blades": "1D6 DAMAGE",
+            "swiveling_spike_wall": "1D6 DAMAGE",
+            "time_bomb": "1D6 DAMAGE",
+            "toxic_gas_jets": "1D6 DAMAGE",
+            "tripwires": "1D6 DAMAGE"
+        },
+        "electronic": {
+            "automated_turrets": "1D6 DAMAGE",
+            "car_bomb": "1D6 DAMAGE",
+            "claymore_mines": "1D6 DAMAGE",
+            "landmines": "1D6 DAMAGE",
+            "room_fills_with_water": "1D6 DAMAGE"
+        },
+        "deception": {
+            "clothesline_trap": "no DAMAGE",
+            "compactor_room": "no DAMAGE",
+            "covered_pits": "no DAMAGE",
+            "crate_mimic": "no DAMAGE",
+            "illusory_wall": "no DAMAGE",
+            "invisible_bridge": "no DAMAGE",
+            "monster_closet": "no DAMAGE"
+        }
+    },
+    "bosses": {
+        "difficulty_scale": {
+            "easy": {"hp": 9, "armor": 1, "damage": "1D6"},
+            "medium": {"hp": 12, "armor": 2, "damage": "1D6+1"},
+            "hard": {"hp": 24, "armor": 3, "damage": "1D6+2"},
+            "extreme": {"hp": 32, "armor": 4, "damage": "2D6"},
+            "impossible": {"hp": 45, "armor": 5, "damage": "4D6"},
+            "nightmare": {"hp": 60, "armor": 6, "damage": "6D6"}
+        },
+        "premade_bosses": {
+            "ikara_queen_of_sea": {
+                "page": 129,
+                "difficulty": "nightmare",
+                "stats": {"hp": 60, "armor": 6, "damage": "6D6"},
+                "boss_moves": ["dampening_field", "water_torrent", "tentacle_grab"]
+            },
+            "mobile_platform_canticle": {
+                "page": 130,
+                "difficulty": "nightmare",
+                "stats": {"hp": 60, "armor": 6, "damage": "6D6"},
+                "boss_moves": ["nuclear_strike", "mech_transform", "energy_shield"]
+            },
+            "writhing_mass_of_flesh": {
+                "page": 132,
+                "difficulty": "nightmare",
+                "stats": {"hp": 60, "armor": 6, "damage": "6D6"},
+                "boss_moves": ["engulf", "acid_spray", "split_form"]
+            }
+        }
+    }
+}

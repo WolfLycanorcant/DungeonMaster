@@ -1,0 +1,123 @@
+{
+    "section": "Example Mercs",
+    "characters": [
+        {
+            "name": "ZERO",
+            "codename": "ZERO",
+            "stats": {
+                "max_hp": 6,
+                "armor": 1,
+                "war_dice": 0,
+                "attributes": {
+                    "forceful": 1,
+                    "tactical": 0,
+                    "creative": 0,
+                    "reflexive": 0
+                }
+            },
+            "role": {
+                "name": "CRUSADER",
+                "description": "Kill the right people for the right reasons"
+            },
+            "traits": ["INTERROGATE", "VETERAN"],
+            "inventory": [
+                {"name": "M16 assault rifle", "damage": "1D6+1 DAMAGE"},
+                {"name": "KA-BAR combat knife", "damage": "1D6 DAMAGE"},
+                {"name": "Balaclava", "effect": "Hides identity"}
+            ],
+            "background": {
+                "description": "Former U.S. Army Corporal who defected after refusing to execute POWs in Vietnam",
+                "current_status": "Member of FIST, seeking to use his talents for good"
+            },
+            "interview_transcript": "[ZIPPO FLICKING OPEN, LONG INHALE] There is no place for men like us in the world. We are soldiers, killers, instruments of war. When I wouldn't kill for them, they didn't want me anymore — but killing is all I know. [CONTEMPLATIVE PAUSE] I refuse to be the pawn of some nation. What a sick joke. Good men don't follow orders. They use their heads. [AUDIO ENDS]"
+        },
+        {
+            "name": "SPLICE",
+            "codename": "SPLICE",
+            "stats": {
+                "max_hp": 8,
+                "armor": 0,
+                "war_dice": 0,
+                "attributes": {
+                    "forceful": 0,
+                    "tactical": -1,
+                    "creative": 0,
+                    "reflexive": 0
+                }
+            },
+            "role": {
+                "name": "PUNK",
+                "description": "Smash the Anglo-European establishment"
+            },
+            "traits": ["DUELIST", "MUTANT"],
+            "inventory": [
+                {"name": "Stolen MI6 laser katana", "damage": "1D6+2 DAMAGE"},
+                {"name": "Home-cooked toxic grenade", "damage": "1D6+2 DAMAGE", "uses": 1}
+            ],
+            "background": {
+                "description": "Result of GENOME MI6 supersoldier program, with randomized genetic code and enhanced blade skills",
+                "interests": ["Bass player", "Abstract sculptor", "Underground literature enthusiast"]
+            },
+            "interview_transcript": "[FINGERTIPS DRUMMING, 'DESTROYER' — THE KINKS PLAYS FAINTLY] Oi, oi, what's that you wrote in my file there? 'Mutant'? That's a bit derogatory, don't you think, mate? [PENCIL TAPPING ON PAPER] I think I prefer 'ultrahuman.' Doesn't that have a certain ring to it? Heh. Say, have we got anything to eat? Could order something, no...? [AUDIO ENDS]"
+        },
+        {
+            "name": "GATE",
+            "codename": "GATE",
+            "stats": {
+                "max_hp": 6,
+                "armor": 0,
+                "war_dice": 4,
+                "attributes": {
+                    "forceful": 0,
+                    "tactical": 0,
+                    "creative": 1,
+                    "reflexive": 0
+                }
+            },
+            "role": {
+                "name": "HEALER",
+                "description": "Food is medicine — a family tradition"
+            },
+            "traits": ["CHEF", "SUMMON"],
+            "summon_spirits": ["Iruthon (storms)", "Agonnaz (pain)"],
+            "inventory": [
+                {"name": "Meat cleaver", "damage": "1D6+1 DAMAGE"},
+                {"name": "Box of tea lights", "damage": "1D6 DAMAGE"}
+            ],
+            "background": {
+                "description": "Born with thin veil to Otherworld, trained in family restaurant",
+                "history": "Orphaned after magical altercation with police, rescued by FIST"
+            },
+            "interview_transcript": "[PAN SIZZLING, PLATES CLATTERING] Listen, I can't talk for long. I've got this fried rice going, these— these collard greens, eyeballs, Jesus— [CLANGING, BURNERS FWOOSH] Splice alone could eat us bankrupt with that mutant metabolism— [SUDDEN SIZZLING] Fucking milk's boiling over— [AUDIO ENDS]"
+        },
+        {
+            "name": "WHIPLASH",
+            "codename": "WHIPLASH",
+            "stats": {
+                "max_hp": 11,
+                "armor": 0,
+                "war_dice": 2,
+                "attributes": {
+                    "forceful": 0,
+                    "tactical": 0,
+                    "creative": 1,
+                    "reflexive": 1
+                }
+            },
+            "role": {
+                "name": "WILDCARD",
+                "description": "Drive fast cars, live for cheap thrills"
+            },
+            "traits": ["ACE", "XENO"],
+            "inventory": [
+                {"name": "Plasma pistol", "damage": "1D6 DAMAGE", "charge_up": "1D6+1"},
+                {"name": "Fuzzy dice", "effect": "gives any vehicle +2 MAX HP"}
+            ],
+            "background": {
+                "description": "Claims to be on second excursion to Earth, first around year 0",
+                "history": "Holographic human disguise failed during Roman preaching attempt, took long vacation until mid-60s"
+            },
+            "interview_transcript": "[CHAIR LEGS CREAKING] I told 'em I was the second coming, they said- they said, 'No, you're a bum and you're crazy.' I told 'em, well, you sound just like Pontius did. They didn't like that, tried to put me in an institution. So, I'm done with preaching: I race cars now. [CLEARS THROAT] You got any water? [GLASS CLINKING, HISSING THROUGH TEETH] Damn, a cheap Merlot. I must be off my game today. [AUDIO ENDS]"
+        }
+    ]
+}

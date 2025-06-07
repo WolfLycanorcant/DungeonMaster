@@ -1,0 +1,114 @@
+{
+    "section": "Traits Index",
+    "summary": {
+        "traits": [
+            "ACCOUNTANT", "ACE", "ACHILLES", "AIMBOT", "AKIMBO", "AMATEUR",
+            "ANALYST", "ANIMUS", "AQUATIC", "ARMORED", "ARTIST", "ASSASSINATION",
+            "ASTRONAUT", "ATMOKINESIS", "AURA", "BERSERKER", "BOMBER", "BOTTLENECK",
+            "BOUNCE", "BREAKDOWN", "BUDDY", "BUILDER", "BUM", "CAMOUFLAGE",
+            "CANNIBAL", "CENTIPEDE", "CHAMPION", "CHARM", "CHEF", "CHEMIST",
+            "CLASSY", "CLIMBER", "COMMANDO", "CONCEAL", "CONTORTIONIST", "CRUEL",
+            "CUT", "CYBORG", "DEBATEUR", "DEFUSE", "DETECTIVE", "DETONATOR",
+            "DIRECTOR", "DIRTY", "DISGUISE", "DOORS", "DRUID", "DUELIST",
+            "ECHO", "EMPATHY", "EXPERT", "FASHIONABLE", "FATALITY", "FATE",
+            "FIELD", "FIEND", "FIGHTER", "FIREFIGHTER", "FLIGHT", "FLOW",
+            "FLURRY", "FOCUS", "FORAGE", "FREEZE", "GADGETS", "GANGSTER",
+            "GENIUS", "GOONS", "GROUND", "GROW", "HACKER", "HAPPY",
+            "HARVEST", "HATE", "HAZARD", "HEADSPACE", "HEAVYWEIGHT", "HENSHIN",
+            "HEX", "HIGHLANDER", "HIJACK", "HOLY", "HUNTER", "HYBRID",
+            "HYPNOSIS", "ICEBREAKER", "ILLUSION", "IMPROVISE", "INJECTION", "INSURANCE",
+            "INTERROGATION", "JANITOR", "JINX", "JOKER", "KNIGHT", "LIMBS",
+            "LIMIT", "LINK", "LISTEN", "LOVER", "LUSH", "LYCANTHROPE",
+            "MASCOT", "MECHANIC", "MEDIC", "MERCY", "MIMIC", "MINDREADER",
+            "MOBILITY", "MOMENTUM", "MONOLOGUE", "MONSTERS", "MORBID", "MURDER",
+            "MUTANT", "NEUROMANCER", "NINJA", "NOIR", "NUMBERS", "OBJECTS",
+            "OOZE", "PAINLESS", "PARKOUR", "PATHETIC", "PET", "PHONE",
+            "PIRATE", "POCKET", "POLYGOT", "PRECOGNITION", "PREPPER", "PROJECTION",
+            "PROSTHETIC", "PSYCHOMETRY", "PUNCTUAL", "PUPPETMASTER", "PYROMANIAC", "QUANTUM",
+            "QUILLS", "RADIOACTIVE", "RAGE", "RECRUIT", "RELOAD", "RETREAT",
+            "RIVAL", "ROBOT", "RUNNER", "SAWBONES", "SCAVENGER", "SCOUT",
+            "SEAL", "SECURITY", "SEDUCE", "SEER", "SEXY", "SHARPSHOOTER",
+            "SHIELD", "SHOW", "SHRINK", "SKELETON", "SLACKER", "SLEEPER",
+            "SLOWMO", "SMASH", "SMITH", "SMOKER", "SNATCHER", "SNEAK",
+            "SNIPER", "SOAK", "SOCIAL", "SPY", "STAND", "STATIC",
+            "STATUESQUE", "STICKY", "STONER", "STRETCH", "STUBBORN", "SUMMONER",
+            "SUNDER", "SUPPLY", "SURVEILLANCE", "SYMBIOTE", "SYNTHETIC", "TACTICIAN",
+            "TEACHER", "TECHNIQUE", "TELEKINETIC", "TELEPORT", "THEATRICS", "THIEF",
+            "THRALL", "TRAPS", "TRIPPER", "TRUTH", "TURNCOAT", "TURRET",
+            "UNARMED", "UNDEAD", "UNFEELING", "VAMPIRE", "VEHICLE", "VENOMOUS",
+            "VETERAN", "VOLATILE", "WALLBANG", "WEAPONMASTER", "WEB", "WEIGHTLIFTER",
+            "WHISPERER", "WINNER", "WITCH", "WITTY", "WIZARD", "XENO"
+        ]
+    },
+    "traits": {
+        "534": {
+            "name": "SKELETON",
+            "description": "You have no flesh—explain why",
+            "effects": {
+                "armor": {
+                    "pierce_slash": 2,
+                    "bludgeon": "+1 DAMAGE"
+                },
+                "revival": {
+                    "condition": "If you reach 0 HP but bones are intact",
+                    "effect": "Rise with 1 HP after reassembly"
+                }
+            },
+            "equipment": {
+                "ownerless_femur": {
+                    "damage": "1D6",
+                    "modifier": "-2 FORCEFUL"
+                }
+            }
+        },
+        "535": {
+            "name": "SLACKER",
+            "description": "You abide by the universe and appreciate simple pleasures",
+            "effects": {
+                "rendezvous": {
+                    "primary": "Single rendezvous point",
+                    "secondary": {
+                        "description": "Additional rendezvous point",
+                        "features": [
+                            "Easy to reach",
+                            "Contains snacks",
+                            "Substances",
+                            "Hammock"
+                        ]
+                    }
+                }
+            },
+            "equipment": {
+                "shabby_clothes": {
+                    "armor": 0,
+                    "modifier": "-1 TACTICAL"
+                }
+            }
+        },
+        "536": {
+            "name": "SLEEPER",
+            "description": "Your personality is a programmed front hiding a dormant sleeper agent",
+            "effects": {
+                "activation": {
+                    "process": "Table consensus on activation phrase",
+                    "example_phrases": [
+                        "The woman in white walks backwards through Prague",
+                        "Epsilon orange Manila seventeen"
+                    ]
+                },
+                "persona": {
+                    "creation": "Create new FIST character with different traits",
+                    "advancement": "Advance equal number of times",
+                    "swap": "Swap between personas on hearing activation phrase",
+                    "inventory": "Does not change with persona"
+                }
+            },
+            "equipment": {
+                "tape_recorder": {
+                    "function": "Plays activation phrase",
+                    "modifier": "-1 CREATIVE"
+                }
+            }
+        }
+    }
+}

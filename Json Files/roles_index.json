@@ -1,0 +1,149 @@
+{
+    "section": "Roles Index",
+    "roles": {
+        "ABANDONED": {
+            "description": "Describe the war-torn country where you learned to live on nothing and fight to survive as a child.",
+            "advance_condition": "Advance if you adequately contributed your part to the mission without anybody else's help."
+        },
+        "AMNESIAC": {
+            "description": "Describe the most recent event you remember (like waking up in a vat a week ago, or learning your name from the unfamiliar wallet in your coat).",
+            "advance_condition": "Advance if your understanding of yourself or the world changes dramatically over the course of the mission."
+        },
+        "AVENGER": {
+            "description": "Describe someone who wronged you, and what they did.",
+            "advance_condition": "Advance if something you did brought you closer to exacting your revenge, or decisively stopped a similar injustice."
+        },
+        "CHESSMASTER": {
+            "description": "Describe what you plan to do with absolute power.",
+            "advance_condition": "Advance if something you did brought you closer, on a long-term scale, to holding a position of extreme power over a large group of people."
+        },
+        "CLEANUP": {
+            "description": "Describe a far-reaching and complex catastrophe which you are responsible for.",
+            "advance_condition": "Advance if you meaningfully healed some piece of its aftermath, or the aftermath of a similar catastrophe."
+        },
+        "CRUSADER": {
+            "description": "Describe an ethical ideal you hold dear that is difficult to achieve.",
+            "advance_condition": "Advance if something you did aligned with that ethical ideal, even though sticking to your scruples made your life harder."
+        },
+        "CULTIST": {
+            "description": "Describe the esoteric religious sect to which you belong, and the chilling prophecy in which you believe.",
+            "advance_condition": "Advance if you drafted someone of significant importance or power into your cult, or if you turned the cosmic clock closer to your hallowed day of reckoning."
+        },
+        "DEALMAKER": {
+            "description": "Describe the foolproof strategy you have devised to close any deal.",
+            "advance_condition": "Advance if you end the mission with significantly more wealth, influence, or capital than you had coming in."
+        },
+        "DIPLOMAT": {
+            "description": "Describe the types of relationships you like to form.",
+            "advance_condition": "Advance if you forged a brand new one or kept a relationship in jeopardy intact, and it changed the course of the mission."
+        },
+        "ENEMY": {
+            "description": "Describe the front of plausible deniability which you maintain in order to keep working for FIST.",
+            "advance_condition": "Advance if you completed the mission objective relayed to you by CYCLOPS without outing yourself to the team."
+        },
+        "FIREBRAND": {
+            "description": "Describe your hot-blooded hopes for the future.",
+            "advance_condition": "Advance if an event during the mission was a key moment in your coming-of-age, or if you proved your competence to a more experienced teammate."
+        },
+        "FLUX": {
+            "description": "Describe why your motivations and worldview are in a constant state of flux.",
+            "advance_condition": "When each mission begins, roll a random role (D66), answer the \"describe\" section as succinctly as possible, and play as though that role were yours for the duration of the mission."
+        },
+        "FUGITIVE": {
+            "description": "Describe a high-caliber crime: one that you did commit, or one that you actually didn't commit (and if so, who framed you).",
+            "advance_condition": "Advance if something you did made significant progress towards clearing your name, or if you fought off the long arm of the law."
+        },
+        "GLADIATOR": {
+            "description": "Describe an honorable, legendary warrior whom you admire and aspire to emulate.",
+            "advance_condition": "Advance if you fought and bested a powerful enemy using their combat philosophy."
+        },
+        "HEALER": {
+            "description": "Describe your medical philosophy, and tell the table the story of your teacher, a renowned and unconventional practitioner of medicine.",
+            "advance_condition": "Advance if none of your teammates died under your watch."
+        },
+        "ICON": {
+            "description": "Describe how you want to go down in history.",
+            "advance_condition": "Advance if something you did brought you closer to becoming a legend, or ensured a group of people would never forget your name."
+        },
+        "MASK": {
+            "description": "Describe your vice as you would for the WILDCARD trait, and describe why you pretend to be eccentric and unpredictable.",
+            "advance_condition": "Advance if you took off the mask to protect someone in your path of chaos, without giving your true nature away to your enemies."
+        },
+        "MAVERICK": {
+            "description": "Describe the moment you lost your faith in everyone else.",
+            "advance_condition": "Advance if you did something during a mission that no one else did, in a way that no one will ever forget."
+        },
+        "MERCENARY": {
+            "description": "Describe how you ended up working with the rest of these bleeding-heart weirdos.",
+            "advance_condition": "Advance if you completed the mission according to its original parameters—no funny business—and made sure to collect your pay."
+        },
+        "MUDDLER": {
+            "description": "Describe a piece of simple, common knowledge which is in fact wrong, and attempt to describe the infinitely more complex correct answer.",
+            "advance_condition": "Advance if you made things more complicated in a major way, or catastrophically obfuscated the truth about something important."
+        },
+        "NIHILIST": {
+            "description": "Describe how you arrived at the ultimate conclusion—nothing truly matters.",
+            "advance_condition": "Advance if you showed no fear of death and no self-preservation instinct at any point during the mission."
+        },
+        "PARTISAN": {
+            "description": "Describe your experiences with the creation, mistreatment, or erasure of ultrahuman beings.",
+            "advance_condition": "Advance if you proved that ultrahumans can and should stand on their own, or if you created a new ultrahuman."
+        },
+        "PEACEMAKER": {
+            "description": "Describe your vision for a world without war, and your opinion on the use of violence.",
+            "advance_condition": "Advance if you prevented, stopped, or eased a violent geopolitical conflict."
+        },
+        "PUNK": {
+            "description": "Describe a long-standing oppressive establishment that hurt you.",
+            "advance_condition": "Advance if something you did weakened that establishment, or meaningfully helped people who are also being oppressed by it."
+        },
+        "PROVIDER": {
+            "description": "Describe the person or entity which cannot survive without you and your work.",
+            "advance_condition": "Advance if you found something that would make them deeply happy and brought it to the end of the mission."
+        },
+        "REPENTANT": {
+            "description": "Describe a shameful and horrible decision from your past.",
+            "advance_condition": "Advance if something you did atoned for your sins in a meaningful way, or completely changed the context in which you view your past deeds."
+        },
+        "REPRESENTATIVE": {
+            "description": "Describe your vision for a world where the ultrahuman condition has been publicized and normalized.",
+            "advance_condition": "Advance if you created empathy and understanding between ultrahumans and the world."
+        },
+        "RETURN": {
+            "description": "Describe the faraway place or time from which you hail, and the improbable circumstances that found you stranded here.",
+            "advance_condition": "Advance if you made progress in your quest to go home, or if you made contact with someone from the place-before."
+        },
+        "RETIRED": {
+            "description": "Describe your past exploits, your retirement, how you ended up back in action, and why you can't go home just yet.",
+            "advance_condition": "Advance if you made significant progress toward returning home, or if you showed how an old dog can still learn new tricks."
+        },
+        "ROOKIE": {
+            "description": "Describe your ideal \"first mission\" experience.",
+            "advance_condition": "Advance (and choose a new role) if a mission goes exactly how you'd always hoped it would. If it doesn't, advance (and keep this role) if your teammates stepped in at the last moment to save you from certain death."
+        },
+        "SCHOLAR": {
+            "description": "Describe the esoteric and obscure subject you are most curious about.",
+            "advance_condition": "Advance if something you learned brought you closer to unlocking the ultimate secrets of that subject, or if you brought a prize specimen to the end of the mission."
+        },
+        "SKEPTIC": {
+            "description": "Describe your rational and meticulously vetted worldview.",
+            "advance_condition": "Advance if you venture a real, reasonable explanation for something paranormal and unfamiliar you encounter (and you're proven right)."
+        },
+        "UNKNOWN": {
+            "description": "Describe how difficult it is to find a cause, a purpose, or something to fight for.",
+            "advance_condition": "Advance if you overcame a challenge or secured a valuable item far beyond your expected level of ability."
+        },
+        "WANDERER": {
+            "description": "Describe the event which sent you drifting from place to place.",
+            "advance_condition": "Advance if you have left behind no lasting trace of your presence by the end of a mission, or if someone you met will always miss you."
+        },
+        "WILDCARD": {
+            "description": "Describe your primary vice or source of pleasure, such as money, romance, thrills, or pain.",
+            "advance_condition": "Advance if you got your fix during a mission in a way nobody, including yourself, expected."
+        },
+        "WRETCH": {
+            "description": "Describe the uniquely horrible misfortune which has befallen you.",
+            "advance_condition": "Advance if something happens to you which makes your suffering poetically worse, or if you give your misery some company."
+        }
+    }
+}

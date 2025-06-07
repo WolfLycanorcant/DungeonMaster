@@ -1,0 +1,123 @@
+{
+    "section": "Using Agency",
+    "agency_definition": {
+        "description": "Core element of immersion in tabletop RPGs",
+        "importance": {
+            "gameplay": "Enables players to make meaningful choices",
+            "immersion": "Creates tangible and reactive game world",
+            "human_element": "Leverages power of imagination"
+        }
+    },
+    "player_agency": {
+        "description": "Players' ability to make meaningful decisions",
+        "aspects": {
+            "actions": "What they do",
+            "communication": "What they say",
+            "values": "What they respect, listen to, and protect",
+            "problem_solving": "What they circumvent, co-opt, or kill"
+        }
+    },
+    "world_agency": {
+        "description": "Game world as living space",
+        "characteristics": {
+            "independence": "Exists independent of players",
+            "reactivity": "Responds to character actions",
+            "continuity": "Continues without player presence",
+            "depth": "More than just player-focused elements"
+        }
+    },
+    "referee_guidelines": {
+        "agency_respect": {
+            "principles": [
+                "Don't railroad players",
+                "Don't protect from failures",
+                "Don't force everything to revolve around players"
+            ]
+        },
+        "practical_approaches": {
+            "intent_and_details": {
+                "description": "Ask for player intent and details",
+                "example": {
+                    "initial_action": "I shoot the guard chasing me",
+                    "clarifying_questions": [
+                        "How are you shooting them?",
+                        "Just a wild hip-fire?"
+                    ],
+                    "player_response": "I'll shoot for the foot. Slow him down, so I can double back for an interrogation."
+                }
+            },
+            "real_consequences": {
+                "description": "Allow real consequences instead of invisible walls",
+                "example": {
+                    "player_action": "Shoot important NPC in face",
+                    "consequences": [
+                        "Bullet casing clinking to floor",
+                        "Civilian commotion",
+                        "Police arrival",
+                        "Chase sequence",
+                        "Shootout ignoring original mission"
+                    ]
+                }
+            },
+            "living_people": {
+                "description": "Create realistic characters",
+                "character_types": {
+                    "office_workers": {
+                        "concerns": [
+                            "Job loss",
+                            "Supporting families"
+                        ]
+                    },
+                    "guards": {
+                        "characteristics": [
+                            "Boredom",
+                            "Loneliness",
+                            "Distance from command"
+                        ]
+                    },
+                    "villains": {
+                        "vulnerabilities": [
+                            "Family",
+                            "Financial incentives"
+                        ]
+                    }
+                }
+            },
+            "mission_flexibility": {
+                "description": "Allow players to change mission objectives",
+                "scenarios": [
+                    "Mission drops",
+                    "Objective deviations",
+                    "Mission sabotage",
+                    "New mission creation"
+                ]
+            }
+        }
+    },
+    "agency_principles": {
+        "player_power": {
+            "description": "Players have power to shape world",
+            "examples": [
+                "Choose actions",
+                "Influence story",
+                "Create new objectives"
+            ]
+        },
+        "world_reactivity": {
+            "description": "World reacts to player actions",
+            "examples": [
+                "NPC decisions",
+                "Environmental changes",
+                "Event consequences"
+            ]
+        },
+        "narrative_flexibility": {
+            "description": "Allow for unexpected outcomes",
+            "examples": [
+                "Player-driven story changes",
+                "NPC agency",
+                "World consequences"
+            ]
+        }
+    }
+}

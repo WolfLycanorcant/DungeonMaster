@@ -1,0 +1,113 @@
+{
+    "section": "Quality Fiction",
+    "theater_of_mind": {
+        "description": "Referee's role in creating engaging narrative",
+        "pillars": [
+            "Trust",
+            "Chance",
+            "Rules"
+        ]
+    },
+    "show_running": {
+        "description": "Referee's responsibility to maintain engaging narrative",
+        "key_elements": {
+            "pacing": {
+                "importance": "Keep things moving",
+                "failure_handling": "Fail forward with negative consequences",
+                "success_handling": "Introduce new challenges",
+                "partial_success": "Think of difficult compromises"
+            },
+            "suspension_of_disbelief": {
+                "description": "Maintain consistent world behavior",
+                "guidelines": [
+                    "Don't pull things out of nowhere",
+                    "Maintain established setting",
+                    "Ensure realistic world behavior",
+                    "NPCs should have inner lives",
+                    "Environment should react realistically"
+                ]
+            },
+            "character_fan": {
+                "description": "Support player characters",
+                "approach": [
+                    "Excite with grand conspiracies",
+                    "Allow clever solutions",
+                    "Provide legendary mercenary opportunities"
+                ]
+            }
+        }
+    },
+    "audience_respect": {
+        "description": "Maintaining fair and open gameplay",
+        "principles": {
+            "transparency": {
+                "description": "Don't hide important information",
+                "practices": [
+                    "Communicate reasonable character knowledge",
+                    "Present actionable challenges",
+                    "Roll dice openly",
+                    "Be consistent and clear in rulings"
+                ]
+            },
+            "rulings": {
+                "description": "Balance flexibility and fairness",
+                "guidelines": [
+                    "Allow creative uses of tools",
+                    "Maintain fairness for all players",
+                    "Open dialogue for unclear trait functions",
+                    "Balance fun with rules"
+                ]
+            },
+            "realism": {
+                "description": "Allow realistic consequences",
+                "examples": [
+                    "Player mistakes have consequences",
+                    "External forces affect plans",
+                    "Conflict and failure are natural"
+                ]
+            }
+        }
+    },
+    "story_telling": {
+        "description": "Approach to narrative progression",
+        "principles": {
+            "dice_response": {
+                "description": "Use randomness for energy and mystery",
+                "practice": "Don't fudge rolls or guide to pre-planned endings"
+            },
+            "improvisation": {
+                "description": "Be ready to adapt to player choices",
+                "notes": [
+                    "Prepare for different paths",
+                    "Handler-like role in providing information",
+                    "Expect to discard unused ideas"
+                ]
+            },
+            "fun_over_rules": {
+                "description": "Core design principle",
+                "rationale": "People are smarter and more fun than a book",
+                "flexibility": "Game designed for flexible gameplay"
+            }
+        }
+    },
+    "narrative_formality": {
+        "description": "Approach to narrative delivery",
+        "styles": {
+            "formal": {
+                "example": "Something formless and hateful bubbles up from the musty, oppressive darkness around you."
+            },
+            "casual": {
+                "examples": [
+                    "She pulls up and gets out of her car; she has a James Bond thing going on.",
+                    "You absolutely blow his brains out.",
+                    "Okay... the shadows are fucking moving, what now?"
+                ]
+            },
+            "notes": [
+                "Casual style maintains pace",
+                "Sells theme effectively",
+                "Sets tone appropriately"
+            ]
+        }
+    }
+}
