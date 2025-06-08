@@ -840,125 +840,54 @@ Numerical choices from menus are also accepted.
         """Move the player to a new location if it's a valid destination."""
         # Get current location (uses cache unless player moved previously and it wasn't refreshed)
         current_location_data = self.get_current_location()
-        if not current_location_data: # Handles if current_player is None via get_current_location
+        if not current_location_data:  # Handles if current_player is None via get_current_location
             return "You need to create a character first."
-            
+
+        # Check if destination is a valid exit from current location
         exits = current_location_data.get("exits", [])
         if destination not in exits:
             return f"You can't go to {destination} from here. Available exits: {', '.join(exits)}"
-            
+
+        # Check if destination is a valid location
         if destination not in self.locations:
             return f"{destination} is not a valid location."
-            
+
+        # Update player's location
         self.current_player.current_location = destination
 
-        # IMPORTANT: Force refresh the location cache after moving
-        new_location_details = self.get_current_location(force_refresh=True)
+        # Clear the location cache since we're moving to a new location
+        self._current_location_cache = None
 
-        if not new_location_details: # Should ideally not happen if destination is valid
-            return f"You have moved to {destination}, but details about this location could not be retrieved."
+        # Get the new location's data
+        new_location = self.get_current_location(force_refresh=True)
+        if not new_location:
+            return f"You arrive at {destination}, but something seems off..."
 
-        response_parts = [f"You arrive at {self.current_player.current_location}."]
-        response_parts.append(new_location_details.get("dynamic_description", "It's hard to make out any details here."))
+        # Build the response
+        response_parts = [f"You move to {destination}."]
 
-        if new_location_details.get("exits"):
-            response_parts.append(f"Exits: {', '.join(new_location_details['exits'])}")
+        # Add location description if available
+        if "description" in new_location:
+            response_parts.append(new_location["description"])
 
-        if new_location_details.get("npcs"):
-            response_parts.append(f"You see: {', '.join(new_location_details['npcs'])}")
-        else:
-            response_parts.append("You see no one of interest here.")
-            
+        # Add visible exits if available
+        if "exits" in new_location and new_location["exits"]:
+            response_parts.append(f"Exits: {', '.join(new_location['exits'])}")
+
+        # Add NPCs if present
+        if "npcs" in new_location and new_location["npcs"]:
+            response_parts.append(f"You see: {', '.join(new_location['npcs'])}")
+
+        # Update the last known location
+        self._last_known_player_location = destination
+
+        # Update session memory with the move action
+        self.update_session_memory(
+            f"moved to {destination}",
+            f"Arrived at {destination}. {new_location.get('description', '')}"
+        )
+
         return "\n".join(response_parts)
-
-        # Removed the redundant command processing block that was here.
-        # The responsibility of move_player is to change location and describe the new one.
-        # Further command processing will be handled by the next call to process_input in the main loop.
-            
-        elif command in ["inventory", "i"]:
-            if not self.current_player:
-                return "You need to create a character first."
-                
-            if not self.current_player.inventory:
-                return "Your inventory is empty."
-                
-            items = [str(item) for item in self.current_player.inventory]
-            return "Inventory:\n" + "\n".join(f"- {item}" for item in items)
-            
-        elif command.startswith("equip "):
-            if not self.current_player:
-                return "You need to create a character first."
-                
-            item_name = command[6:].strip()
-            for item in self.current_player.inventory:
-                if item.name.lower() == item_name.lower():
-                    return self.current_player.equip_item(item)
-            return f"You don't have '{item_name}' in your inventory."
-            
-        elif command in ["status", "stats"]:
-            if not self.current_player:
-                return "You need to create a character first."
-                
-            stats = [
-                f"Name: {self.current_player.name}",
-                f"Class: {self.current_player.character_class}",
-                f"Level: {self.current_player.level}",
-                f"HP: {self.current_player.hit_points}",
-                "\nAttributes:"
-            ]
-            stats.extend(
-                f"{attr.capitalize()}: {val}" 
-                for attr, val in self.current_player.attributes.items()
-            )
-            return "\n".join(stats)
-            
-        elif command in ["help", "h"]:
-            return """
-Available Commands:
-  look (l) - Look around your current location
-  inventory (i) - Check your inventory
-  equip [item] - Equip an item from your inventory
-  status - Check your character's status
-  go [direction] - Move to a new location
-  talk [npc] - Talk to an NPC
-  use [item] - Use an item from your inventory
-  help (h) - Show this help message
-  exit - Quit the game
-"""
-            
-        elif command == "exit":
-            return "Thank you for playing!"
-            
-        elif command.startswith("go "):
-            if not self.current_player:
-                return "You need to create a character first."
-                
-            destination = command[3:].strip()
-            return self.move_player(destination)
-            
-        elif command.startswith("talk to"):
-            npc_name = command[7:].strip()
-            if not self.current_player:
-                return "You need to create a character first."
-                
-            location = self.get_current_location()
-            # Ensure current_player exists before trying to access its attributes or location
-            if not self.current_player:
-                return "You need to create a character first to talk to someone."
-
-            current_location_details = self.get_current_location() # Get current location to check for NPCs
-            if not current_location_details or not current_location_details.get("npcs"):
-                return f"{npc_name} is not here, or there's no one to talk to."
-
-            # Case-insensitive check if NPC is in the current location's NPC list
-            if npc_name.lower() in [n.lower() for n in current_location_details.get("npcs", [])]:
-                npc_dialogue = self.groq_engine.generate_npc_dialogue(
-                    npc_name, 
-                    self.current_player.name, 
-                    self.current_player.current_location # This is a string, suitable for caching
-                )
-                return npc_dialogue
-            return f"{npc_name} is not here."
 
         # Generic action processing for commands not handled above
         # Define command prefixes that constitute a general player action
