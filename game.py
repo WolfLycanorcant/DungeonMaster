@@ -90,20 +90,26 @@ class GroqEngine:
             response = self.client.chat.completions.create(
                 model=self.model,
                 messages=[
-                    {"role": "system", "content": "You are a master Dungeon Master. Provide vivid, immersive descriptions of locations."},
+                    {"role": "system", "content": "You are a master Dungeon Master. Provide vivid, immersive descriptions of locations. Include sensory details, points of interest, environmental conditions, and potential dangers. Keep the description under 1000 tokens."},
                     {"role": "user", "content": prompt}
                 ],
                 temperature=0.7,
-                max_tokens=500
+                max_tokens=1000,
+                stream=False
             )
             
+            # Check if we got a valid response
             if not response or not hasattr(response, 'choices') or not response.choices:
-                logger.warning("Invalid response from Groq for location description.")
-                return "The location is dark and foreboding."
+                logger.warning("No valid response from Groq for location description.")
+                return "You find yourself in a place that defies description."
                 
-            content = response.choices[0].message.content
-            self.description_cache[cache_key] = content
-            return content
+            # Get the full response text
+            full_response = response.choices[0].message.content
+            
+            # Cache the full response
+            self.description_cache[cache_key] = full_response
+            
+            return full_response
         except Exception as e:
             logger.warning("Failed to generate location description: %s", e)
             return "The location is dark and foreboding."
@@ -112,40 +118,37 @@ class GroqEngine:
     def generate_npc_dialogue(self, npc_name: str, player_name: str, location: str) -> str:
         """Generate NPC dialogue using Groq AI."""
         if not self.client:
-            return f"Hello, {player_name}. Welcome to {location}."
+            return f"{npc_name} looks at you but says nothing."
+
+        cache_key = ("npc_dialogue", npc_name, player_name, location)
+        if cache_key in self.description_cache:
+            return self.description_cache[cache_key]
 
         try:
-            prompt = f"""
-            You are {npc_name}, an NPC in a medieval fantasy world.
-            A player named {player_name} approaches you in {location}.
-            
-            Respond in character with:
-            - Your personality and backstory
-            - Local knowledge
-            - Potential quests
-            - Interesting dialogue
-            
-            Keep it immersive and engaging.
-            """
-
             response = self.client.chat.completions.create(
                 model=self.model,
                 messages=[
-                    {"role": "system", "content": "You are an NPC in a medieval fantasy world. Speak in character and provide engaging dialogue."},
-                    {"role": "user", "content": prompt}
+                    {"role": "system", "content": f"You are {npc_name}, a character in a fantasy RPG. Respond naturally to the player. Keep your response under 500 characters."},
+                    {"role": "user", "content": f"Player {player_name} approaches you in {location}. What do you say?"}
                 ],
-                temperature=0.7,
-                max_tokens=2000
+                temperature=0.8,
+                max_tokens=500,
+                stream=False
             )
             
             if not response or not hasattr(response, 'choices') or not response.choices:
-                logger.warning("Invalid response from Groq for NPC dialogue.")
-                return f"Hello, {player_name}. Welcome to {location}."
+                logger.warning(f"No valid response from Groq for NPC dialogue with {npc_name}")
+                return f"{npc_name} seems lost in thought."
                 
-            return response.choices[0].message.content
+            dialogue = response.choices[0].message.content.strip()
+            
+            # Cache the full response
+            self.description_cache[cache_key] = dialogue
+            return dialogue
+            
         except Exception as e:
-            logger.warning("Failed to generate NPC dialogue for %s: %s", npc_name, e)
-            return f"Hello, {player_name}. Welcome to {location}."
+            logger.warning(f"Failed to generate NPC dialogue: {e}")
+            return f"{npc_name} mumbles something unintelligible."
 
     @functools.lru_cache(maxsize=128)
     def generate_action_description(self, player_tuple: tuple, action: str) -> str:
@@ -154,42 +157,39 @@ class GroqEngine:
         Example: (player_name, player_class, player_level)
         """
         if not self.client:
-            return f"The action '{action}' happens without incident."
+            return f"You {action}."
 
-        player_description = f"Player: Name: {player_tuple[0]}, Class: {player_tuple[1]}, Level: {player_tuple[2]}"
+        cache_key = ("action", player_tuple, action.lower())
+        if cache_key in self.description_cache:
+            return self.description_cache[cache_key]
 
         try:
-            prompt = f"""
-            You are a master Dungeon Master. Describe the outcome of this player action:
-            {player_description}
-            Action: {action}
+            player_name, player_class, player_level = player_tuple
             
-            Describe vividly:
-            - The action performed
-            - Immediate consequences or effects
-            - Relevant environmental interactions
-
-            Keep it immersive, dynamic, and concise (1-2 sentences).
-            """
-
             response = self.client.chat.completions.create(
                 model=self.model,
                 messages=[
-                    {"role": "system", "content": "You are a master Dungeon Master. Describe player actions vividly and concisely."},
-                    {"role": "user", "content": prompt}
+                    {"role": "system", "content": f"You are a master storyteller. Describe the action in an engaging way. Player: {player_name} (Level {player_level} {player_class}). Keep your response under 200 characters."},
+                    {"role": "user", "content": f"Describe this action in 1-2 sentences: {action}"}
                 ],
                 temperature=0.7,
-                max_tokens=300
+                max_tokens=200,
+                stream=False
             )
             
             if not response or not hasattr(response, 'choices') or not response.choices:
-                logger.warning("Invalid response from Groq for action description.")
-                return f"The action '{action}' occurs."
+                logger.warning(f"No valid response from Groq for action: {action}")
+                return f"You {action}."
                 
-            return response.choices[0].message.content
+            description = response.choices[0].message.content.strip()
+            
+            # Cache the full response
+            self.description_cache[cache_key] = description
+            return description
+            
         except Exception as e:
-            logger.warning("Failed to generate action description for action '%s': %s", action, e)
-            return f"The action '{action}' leads to unexpected results."
+            logger.warning(f"Failed to generate action description: {e}")
+            return f"You {action}."
 
     @functools.lru_cache(maxsize=128)
     def generate_combat_description(self, player_tuple: tuple, enemy_tuple: tuple) -> str:
@@ -201,35 +201,38 @@ class GroqEngine:
         if not self.client:
             return "The clash of steel rings out!"
 
-        player_desc = f"Player: {player_tuple[0]} ({player_tuple[1]} Lvl {player_tuple[2]}, HP: {player_tuple[3]})"
-        enemy_desc = f"Enemy: {enemy_tuple[0]} (Lvl {enemy_tuple[1]}, HP: {enemy_tuple[2]})"
+        cache_key = ("combat", player_tuple, enemy_tuple)
+        if cache_key in self.description_cache:
+            return self.description_cache[cache_key]
 
         try:
-            prompt = f"""
-            You are a master Dungeon Master. Describe this combat moment vividly:
-            {player_desc} is fighting {enemy_desc}.
-            Focus on the action, the environment, and the tension. Keep it concise (1-2 sentences).
-            Example: {player_tuple[0]} lunges with a wild swing, but the {enemy_tuple[0]} sidesteps with a guttural snarl!
-            """
-
+            player_name, player_class, player_level, player_hp = player_tuple
+            enemy_name, enemy_level, enemy_hp = enemy_tuple
+            
             response = self.client.chat.completions.create(
                 model=self.model,
                 messages=[
-                    {"role": "system", "content": "You are a master Dungeon Master. Describe combat moments vividly and concisely."},
-                    {"role": "user", "content": prompt}
+                    {"role": "system", "content": "You are a master storyteller. Describe a combat scene in an engaging way. Keep it under 300 characters."},
+                    {"role": "user", "content": f"Describe a combat scene between {player_name} (Level {player_level} {player_class}) and {enemy_name} (Level {enemy_level})."}
                 ],
-                temperature=0.8, # Slightly higher for more varied combat descriptions
-                max_tokens=150  # Enough for a couple of engaging sentences
+                temperature=0.8,
+                max_tokens=300,
+                stream=False
             )
-
+            
             if not response or not hasattr(response, 'choices') or not response.choices:
-                logger.warning("Invalid response from Groq for combat description.")
-                return "The battle rages on!"
-
-            return response.choices[0].message.content.strip()
+                logger.warning("No valid response from Groq for combat description.")
+                return f"Combat begins between {player_name} and {enemy_name}!"
+                
+            description = response.choices[0].message.content.strip()
+            
+            # Cache the full response
+            self.description_cache[cache_key] = description
+            return description
+            
         except Exception as e:
-            logger.warning("Failed to generate combat description: %s", e)
-            return "Sparks fly as weapons meet!"
+            logger.warning(f"Failed to generate combat description: {e}")
+            return f"Combat begins between {player_name} and {enemy_name}!"
 
 class Item:
     def __init__(self, name: str, item_type: str, stats: Dict[str, Any], stackable: bool = False, max_stack: int = 1):
@@ -280,12 +283,12 @@ class Character:
         self.character_class = character_class
         self.level = level
         self.attributes = {
-            "strength": 10,
-            "dexterity": 10,
-            "constitution": 10,
-            "intelligence": 10,
-            "wisdom": 10,
-            "charisma": 10
+            "toughness": 10,          # Was strength
+            "nimbleness": 10,         # Was dexterity
+            "hardyness": 10,          # Was constitution
+            "book smarts": 10,        # Was intelligence
+            "street smarts": 10,      # Was wisdom
+            "approachability": 10      # Was charisma
         }
         self.hit_points = self.calculate_hit_points()
         self.inventory: List[Item] = []
@@ -312,7 +315,7 @@ class Character:
         
     def calculate_hit_points(self) -> int:
         base_hp = 10
-        con_mod = (self.attributes["constitution"] - 10) // 2
+        con_mod = (self.attributes["hardyness"] - 10) // 2
         return base_hp + (con_mod * self.level)
         
     def add_item(self, item: Item):
@@ -375,14 +378,14 @@ class Character:
     def get_attack_bonus(self) -> int:
         weapon = self.equipped["weapon"]
         if weapon:
-            return self.attributes["strength"] + weapon.stats.get("bonus", 0)
-        return self.attributes["strength"]
+            return self.attributes["toughness"] + weapon.stats.get("bonus", 0)
+        return self.attributes["toughness"]
         
     def get_defense_bonus(self) -> int:
         armor = self.equipped["armor"]
         if armor:
-            return self.attributes["dexterity"] + armor.stats.get("bonus", 0)
-        return self.attributes["dexterity"]
+            return self.attributes["nimbleness"] + armor.stats.get("bonus", 0)
+        return self.attributes["nimbleness"]
         
     def get_item(self, item_name: str) -> Optional[Item]:
         for item in self.inventory:
