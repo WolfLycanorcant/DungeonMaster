@@ -1048,15 +1048,18 @@ def display_inventory(player: Character):
         print(f"- {item.name} ({item.item_type})")
     print()
 
-def display_main_menu():
+def display_main_menu(has_character: bool = False):
     print("\nMain Menu:")
-    print("1. Move to new location")
-    print("2. View inventory")
-    print("3. Equip item")
-    print("4. View character info")
-    print("5. Look around")
-    print("6. Talk to someone")
-    print("7. Exit game")
+    if not has_character:
+        print("1. Create a new character")
+    else:
+        print("1. Move to a new location")
+        print("2. View inventory")
+        print("3. Equip item")
+        print("4. View character status")
+        print("5. Look around")
+        print("6. Talk to NPC")
+        print("7. Exit game")
     print()
 
 if __name__ == '__main__':
