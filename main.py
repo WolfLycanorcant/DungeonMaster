@@ -1,4 +1,4 @@
-from game import RPGGame, display_header, display_character_info, display_inventory, display_main_menu
+from game import RPGGame, GroqEngine, display_header, display_character_info, display_inventory, display_main_menu
 
 def create_character(game):
     print("\n--- Character Creation ---")
@@ -22,7 +22,11 @@ def create_character(game):
         return False
 
 def main():
-    game = RPGGame()
+    # Initialize the Groq engine
+    groq_engine = GroqEngine()
+    
+    # Initialize the game with the Groq engine
+    game = RPGGame(groq_engine)
     context = {"current_location": "Starting Town"}
     display_header()
     print("Welcome to the Dungeon Master RPG!\n")

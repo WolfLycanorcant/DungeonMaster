@@ -1,7 +1,15 @@
 @echo off
 
-:: Install requirements
-python -m pip install -r requirements.txt
+:: Activate the virtual environment
+call dungeonmaster\Scripts\activate.bat
 
-:: Run the Flask app from Server directory
-python Server/main.py
+:: Install requirements if not already installed
+if not exist "dungeonmaster\Lib\site-packages\dotenv" (
+    pip install -r requirements.txt
+)
+
+:: Run the main game
+python main.py
+
+:: Keep the console window open after the game ends
+pause
