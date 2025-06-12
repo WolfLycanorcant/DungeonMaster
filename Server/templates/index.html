@@ -197,6 +197,17 @@
         .game-buttons button:hover {
             background-color: #3a5a80;
         }
+
+        .game-buttons button.active {
+            background-color: #8b0000;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(139, 0, 0, 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(139, 0, 0, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(139, 0, 0, 0); }
+        }
     </style>
 </head>
 <body>
@@ -232,7 +243,9 @@
 
             <div class="game-buttons">
                 <button onclick="lookAround()">Look Around</button>
-                <button onclick="sendConsoleCommand('talk')">Talk to NPC</button>
+                <button id="npcButton" class="action-button" onclick="toggleNPCDialogMode()">
+                    <i class="fas fa-comment-dots"></i> <span id="npcButtonText">Talk to NPC</span>
+                </button>
                 <button onclick="sendConsoleCommand('inventory')">View Inventory</button>
                 <button onclick="sendConsoleCommand('status')">Character Status</button>
                 <button onclick="sendConsoleCommand('save')">Save Game</button>
@@ -391,6 +404,126 @@
             messageDiv.textContent = message;
             consoleOutputElement.appendChild(messageDiv);
             consoleOutputElement.scrollTop = consoleOutputElement.scrollHeight;
+        }
+
+        // Track NPC dialog mode state and current NPC
+        let npcDialogMode = false;
+        let currentNPC = '';
+
+        function toggleNPCDialogMode() {
+            npcDialogMode = !npcDialogMode;
+            const npcButton = document.getElementById('npcButton');
+            const npcButtonText = document.getElementById('npcButtonText');
+            
+            if (npcDialogMode) {
+                npcButton.classList.add('active');
+                npcButtonText.textContent = 'Talking... (Click to stop)';
+                addConsoleMessage(CONSOLE_TYPES.INFO, 'NPC dialog mode active. Type your message to talk to NPCs. Say an NPC\'s name to talk to them.');
+            } else {
+                npcButton.classList.remove('active');
+                npcButtonText.textContent = 'Talk to NPC';
+                currentNPC = '';
+                addConsoleMessage(CONSOLE_TYPES.INFO, 'Exited NPC dialog mode.');
+            }
+        }
+
+        // Modify the sendConsoleCommand function to handle NPC dialog mode
+        async function sendConsoleCommand() {
+            const input = document.getElementById('console-input');
+            const command = input.value.trim();
+            
+            if (!command) return;
+
+            // Add command to console
+            addConsoleMessage(CONSOLE_TYPES.COMMAND, `> ${command}`);
+
+            // Handle NPC dialog mode - everything is treated as dialog to the current NPC
+            if (npcDialogMode) {
+                let npcName = '';
+                let message = command.trim();
+                
+                // Check if the message starts with an NPC name followed by a comma
+                const commaIndex = message.indexOf(',');
+                const spaceIndex = message.indexOf(' ');
+                
+                // If there's a comma before the first space or no space, use that as the NPC name
+                if ((commaIndex > 0 && (spaceIndex === -1 || commaIndex < spaceIndex)) || 
+                    (spaceIndex === -1 && commaIndex === -1)) {
+                    // If there's a comma, split on it
+                    if (commaIndex > 0) {
+                        npcName = message.substring(0, commaIndex).trim();
+                        message = message.substring(commaIndex + 1).trim();
+                    } 
+                    // If no comma but we have a space, treat first word as NPC name
+                    else if (spaceIndex > 0) {
+                        npcName = message.substring(0, spaceIndex).trim();
+                        message = message.substring(spaceIndex + 1).trim();
+                    }
+                    // If no delimiter at all, treat entire input as NPC name
+                    else {
+                        npcName = message;
+                        message = '';
+                    }
+                    
+                    // Update current NPC if we got a new name
+                    if (npcName && npcName.toLowerCase() !== (currentNPC || '').toLowerCase()) {
+                        currentNPC = npcName;
+                        addConsoleMessage(CONSOLE_TYPES.INFO, `Now talking to ${currentNPC}`);
+                        // If there's no message after the name, just update the NPC
+                        if (!message) return;
+                    }
+                }
+                
+                // If we don't have an NPC name by now, use the current one or show error
+                if (!currentNPC) {
+                    addConsoleMessage(CONSOLE_TYPES.ERROR, 'Please specify an NPC name first (e.g., "eldrin, hello" or "guard help")');
+                    return;
+                }
+                
+                try {
+                    const response = await fetch('/api/get_npc_dialogue', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            npc_name: currentNPC,
+                            message: message
+                        })
+                    });
+                    
+                    if (!response.ok) {
+                        const error = await response.json();
+                        throw new Error(error.error || 'Failed to talk to NPC');
+                    }
+                    
+                    const data = await response.json();
+                    addConsoleMessage(CONSOLE_TYPES.RESPONSE, 
+                        `${data.npc_name} (${data.npc_role}): ${data.dialogue}`);
+                    
+                } catch (error) {
+                    addConsoleMessage(CONSOLE_TYPES.ERROR, error.message);
+                }
+                return;
+            }
+            
+            // Original command handling
+            try {
+                const response = await fetch('/api/command', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ command })
+                });
+                
+                const data = await response.json();
+                
+                if (!response.ok) {
+                    throw new Error(data.error || 'Command failed');
+                }
+                
+                // Add response to console
+                addConsoleMessage(CONSOLE_TYPES.RESPONSE, data.response);
+            } catch (error) {
+                addConsoleMessage(CONSOLE_TYPES.ERROR, error.message);
+            }
         }
 
         async function lookAround() {

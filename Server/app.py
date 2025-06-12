@@ -2,6 +2,7 @@ from flask import Flask, render_template, jsonify, request
 from dotenv import load_dotenv
 import sys
 import os
+from datetime import datetime
 
 # Add parent directory to Python path
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -208,6 +209,7 @@ def get_location_description():
 def get_npc_dialogue():
     data = request.json
     npc_name = data.get('npc_name')
+    player_message = data.get('message', '')
 
     if not npc_name:
         return jsonify({"error": "NPC name is required"}), 400
@@ -217,16 +219,39 @@ def get_npc_dialogue():
 
     location_data = game.get_current_location()
     # Case-insensitive check for NPC presence
-    if npc_name.lower() not in [npc.lower() for npc in location_data.get("npcs", [])]:
+    npcs_in_location = [npc.lower() for npc in location_data.get("npcs", [])]
+    if npc_name.lower() not in npcs_in_location:
         return jsonify({"error": f"NPC '{npc_name}' not found in {game.current_player.current_location}"}), 400
 
     try:
+        # Get the actual NPC name with correct casing
+        actual_npc_name = next((npc for npc in location_data.get("npcs", []) 
+                              if npc.lower() == npc_name.lower()), npc_name)
+        
+        # Get NPC object for additional context
+        npc = game.npc_memory.get_npc(actual_npc_name)
+        npc_role = getattr(npc, 'role', 'person') if npc else 'person'
+        
+        # Generate dialogue with context
         dialogue = game.groq_engine.generate_npc_dialogue(
-            npc_name,
-            game.current_player.name,
-            game.current_player.current_location
+            npc_name=actual_npc_name,
+            player_name=game.current_player.name,
+            player_class=game.current_player.character_class,
+            location=game.current_player.current_location,
+            player_message=player_message,
+            npc_role=npc_role
         )
-        return jsonify({"dialogue": dialogue})
+        
+        # Update last interaction time
+        if npc:
+            npc.last_interaction = datetime.now()
+            
+        return jsonify({
+            "dialogue": dialogue,
+            "npc_name": actual_npc_name,
+            "npc_role": npc_role
+        })
+        
     except Exception as e:
         app.logger.error("Error in /api/get_npc_dialogue for NPC '%s': %s", npc_name, str(e), exc_info=True)
         return jsonify({"error": f"Failed to generate NPC dialogue: {str(e)}"}), 500

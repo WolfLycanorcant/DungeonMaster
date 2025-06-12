@@ -338,6 +338,56 @@ class GroqEngine:
         self.description_cache.clear()
         logger.info("Description cache cleared.")
 
+    def generate_npc_dialogue(self, npc_name: str, player_name: str, location: str, 
+                           player_message: str = "", npc_role: str = "person", 
+                           player_class: str = "adventurer") -> str:
+        """
+        Generate NPC dialogue using Groq AI.
+        
+        Args:
+            npc_name: Name of the NPC
+            player_name: Name of the player character
+            location: Current location
+            player_message: Optional message from the player
+            npc_role: The role/occupation of the NPC
+            player_class: The class/occupation of the player character
+            
+        Returns:
+            str: The NPC's response
+        """
+        if not self.client:
+            return "The NPC seems to be ignoring you."
+            
+        try:
+            
+            system_prompt = (
+                f"You are {npc_name}, a {npc_role} in a fantasy RPG. "
+                f"You are currently in {location}. "
+                f"You are talking to {player_name}, a {player_class}. "
+                "Keep your responses concise, in-character, and appropriate for your role. "
+                "If the player is being rude or aggressive, respond accordingly. "
+                "If you don't know something, make something up that fits the setting."
+            )
+            
+            messages = [
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": player_message or f"{player_name} approaches you."}
+            ]
+            
+            response = self.client.chat.completions.create(
+                model=self.model,
+                messages=messages,
+                max_tokens=150,
+                temperature=0.7,
+                top_p=0.9
+            )
+            
+            return response.choices[0].message.content.strip()
+            
+        except Exception as e:
+            logger.error(f"Error generating NPC dialogue: {e}")
+            return f"{npc_name} seems to be lost in thought..."
+
     def generate_description(self, context: Dict[str, Any]) -> str:
         """Generate a location description using Groq AI."""
         if not self.client:
@@ -409,7 +459,9 @@ class GroqEngine:
             return "The location is dark and foreboding."
 
     @functools.lru_cache(maxsize=128)
-    def generate_npc_dialogue(self, npc_name: str, player_name: str, location: str, relationship_status: str = "neutral") -> str:
+    def generate_npc_dialogue(self, npc_name: str, player_name: str, location: str, 
+                           player_message: str = "", npc_role: str = "person", 
+                           player_class: str = "adventurer") -> str:
         """
         Generate NPC dialogue using Groq AI.
         
@@ -417,41 +469,42 @@ class GroqEngine:
             npc_name: Name of the NPC
             player_name: Name of the player character
             location: Current location
-            relationship_status: The NPC's disposition toward the player (e.g., 'friendly', 'neutral', 'hostile')
+            player_message: Optional message from the player
+            npc_role: The role/occupation of the NPC
+            player_class: The class/occupation of the player character
             
         Returns:
-            str: The NPC's dialogue response
+            str: The NPC's response
         """
         if not self.client:
             return f"{npc_name} looks at you but says nothing."
 
-        cache_key = ("npc_dialogue", npc_name, player_name, location, relationship_status)
+        cache_key = ("npc_dialogue", npc_name, player_name, location, player_class, npc_role, player_message)
         if cache_key in self.description_cache:
             return self.description_cache[cache_key]
 
         try:
-            # Base system prompt
-            system_prompt = f"""You are {npc_name}, a character in a fantasy RPG. 
-            You are currently in {location}. {player_name} is talking to you. 
-            Your current relationship with {player_name} is {relationship_status}.
+            # Base system prompt with player class and NPC role
+            system_prompt = f"""You are {npc_name}, a {npc_role} in a fantasy RPG. 
+            You are currently in {location}. {player_name}, a {player_class}, is talking to you.
             Respond naturally to what they say, keeping responses brief (1-2 sentences)."""
             
-            # Adjust tone based on relationship status
-            if relationship_status == "friendly":
-                system_prompt += " You are warm and helpful toward them."
-            elif relationship_status == "hostile":
-                system_prompt += " You are suspicious or unfriendly toward them."
-            elif relationship_status == "neutral":
-                system_prompt += " You are polite but cautious with them."
+            # Adjust tone based on NPC role
+            if "merchant" in npc_role.lower():
+                system_prompt += " You are eager to do business and promote your wares."
+            elif "guard" in npc_role.lower() or "soldier" in npc_role.lower():
+                system_prompt += " You are professional and alert, watching for trouble."
+            else:
+                system_prompt += " You are polite and helpful."
                 
             response = self.client.chat.completions.create(
                 model=self.model,
                 messages=[
                     {"role": "system", "content": system_prompt},
-                    {"role": "user", "content": f"{player_name} greets you."}
+                    {"role": "user", "content": player_message or f"{player_name} greets you."}
                 ],
-                temperature=0.8,
-                max_tokens=150,
+                temperature=0.7,
+                max_tokens=200,
                 top_p=1.0,
                 frequency_penalty=0.5,
                 presence_penalty=0.5,
