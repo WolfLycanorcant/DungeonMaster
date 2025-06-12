@@ -197,6 +197,164 @@
         .game-buttons button:hover {
             background-color: #3a5a80;
         }
+        
+        /* Status Panel Styles */
+        .display-panels {
+            display: flex;
+            gap: 20px;
+            margin: 20px 0;
+        }
+        
+        .display-panel {
+            flex: 1;
+            background: #2c3e50;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+            color: #ecf0f1;
+            display: none;
+            position: relative;
+        }
+        
+        .panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #34495e;
+        }
+        
+        .panel-header h3 {
+            margin: 0;
+            color: #3498db;
+        }
+        
+        .close-btn {
+            background: none;
+            border: none;
+            color: #95a5a6;
+            font-size: 24px;
+            cursor: pointer;
+            padding: 0 8px;
+            line-height: 1;
+        }
+        
+        .close-btn:hover {
+            color: #e74c3c;
+        }
+        
+        /* Status Card */
+        .status-card {
+            background: #34495e;
+            border-radius: 6px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+        
+        .status-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .status-header h4 {
+            margin: 0;
+            color: #2ecc71;
+        }
+        
+        .level {
+            background: #3498db;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 0.9em;
+        }
+        
+        /* Progress Bars */
+        .progress-bar {
+            background: #2c3e50;
+            height: 20px;
+            border-radius: 10px;
+            margin: 5px 0;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .progress {
+            height: 100%;
+            background: #2ecc71;
+            min-width: 20px;
+            border-radius: 10px;
+            transition: width 0.3s ease;
+        }
+        
+        .progress.health { background: #e74c3c; }
+        .progress.mana { background: #3498db; }
+        .progress.exp { background: #f1c40f; }
+        
+        .value {
+            position: absolute;
+            right: 8px;
+            top: 0;
+            line-height: 20px;
+            font-size: 0.8em;
+            color: white;
+            text-shadow: 0 0 2px rgba(0,0,0,0.5);
+        }
+        
+        /* Stats Grid */
+        .status-stats {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        .stat {
+            background: #2c3e50;
+            padding: 8px;
+            border-radius: 4px;
+            display: flex;
+            justify-content: space-between;
+        }
+        
+        .stat.gold {
+            background: #f1c40f;
+            color: #2c3e50;
+            font-weight: bold;
+            grid-column: 1 / -1;
+            justify-content: center;
+        }
+        
+        .label {
+            color: #95a5a6;
+            margin-right: 10px;
+        }
+        
+        .stat .value {
+            position: static;
+            color: inherit;
+            text-shadow: none;
+        }
+        
+        /* Loading State */
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #7f8c8d;
+            font-style: italic;
+        }
+        
+        /* Error State */
+        .error-message {
+            color: #e74c3c;
+            padding: 10px;
+            background: rgba(231, 76, 60, 0.1);
+            border-radius: 4px;
+            margin-top: 10px;
+        }
 
         .game-buttons button.active {
             background-color: #8b0000;
@@ -241,13 +399,44 @@
                 <p>Health: <span id="player-health"></span></p>
             </div>
 
+            <!-- Inventory Display Section -->
+            <div id="inventory-display" style="margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 4px; background-color: #f9f9f9; display: none;">
+                <h3>Inventory</h3>
+                <div id="inventory-items"></div>
+            </div>
+
+            <!-- Status and Inventory Panels -->
+            <div class="display-panels">
+                <!-- Status Panel -->
+                <div id="status-panel" class="display-panel">
+                    <div class="panel-header">
+                        <h3>Character Status</h3>
+                        <button class="close-btn" onclick="togglePanel('status')">×</button>
+                    </div>
+                    <div id="status-content">
+                        <div class="loading">Loading character status...</div>
+                    </div>
+                </div>
+                
+                <!-- Inventory Panel -->
+                <div id="inventory-panel" class="display-panel">
+                    <div class="panel-header">
+                        <h3>Inventory</h3>
+                        <button class="close-btn" onclick="togglePanel('inventory')">×</button>
+                    </div>
+                    <div id="inventory-content">
+                        <div class="loading">Loading inventory...</div>
+                    </div>
+                </div>
+            </div>
+            
             <div class="game-buttons">
                 <button onclick="lookAround()">Look Around</button>
                 <button id="npcButton" class="action-button" onclick="toggleNPCDialogMode()">
                     <i class="fas fa-comment-dots"></i> <span id="npcButtonText">Talk to NPC</span>
                 </button>
-                <button onclick="sendConsoleCommand('inventory')">View Inventory</button>
-                <button onclick="sendConsoleCommand('status')">Character Status</button>
+                <button class="panel-toggle" data-panel="inventory">View Inventory</button>
+                <button class="panel-toggle" data-panel="status">Character Status</button>
                 <button onclick="sendConsoleCommand('save')">Save Game</button>
                 <button onclick="sendConsoleCommand('load')">Load Game</button>
                 <button onclick="sendConsoleCommand('help')">Help</button>
@@ -268,7 +457,9 @@
         const CONSOLE_TYPES = {
             COMMAND: 'command',
             RESPONSE: 'response',
-            ERROR: 'error'
+            ERROR: 'error',
+            INFO: 'info',
+            SYSTEM: 'system'
         };
 
         // Game state variables
@@ -277,6 +468,17 @@
         let enemy = null;
         let combatMode = false;
         let consoleOutput = '';
+        
+        // Add message to console with type
+        function addConsoleMessage(type, message) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `console-${type}`;
+            // Preserve newlines in the message
+            const formattedMessage = message.replace(/\n/g, '<br>');
+            messageDiv.innerHTML = formattedMessage; // Use innerHTML to render <br> tags
+            consoleOutputElement.appendChild(messageDiv);
+            consoleOutputElement.scrollTop = consoleOutputElement.scrollHeight;
+        }
 
         // DOM Elements
         const consoleOutputElement = document.getElementById('console-output');
@@ -361,16 +563,19 @@
             }
         }
 
-        async function sendConsoleCommand() {
+        async function sendConsoleCommand(command = '') {
             const input = document.getElementById('console-input');
-            const command = input.value.trim();
-            
+            // If no command is provided, use the input field value
             if (!command) {
-                return;
+                command = input.value.trim();
+                if (!command) {
+                    return;
+                }
+                // Clear input if we're using the input field
+                input.value = '';
             }
-
-            // Clear input and add command to console
-            input.value = '';
+            
+            // Add command to console
             addConsoleMessage(CONSOLE_TYPES.COMMAND, command);
 
             try {
@@ -406,9 +611,279 @@
             consoleOutputElement.scrollTop = consoleOutputElement.scrollHeight;
         }
 
-        // Track NPC dialog mode state and current NPC
+        // Track UI states
         let npcDialogMode = false;
         let currentNPC = '';
+        let activePanel = null;
+        let inventoryVisible = false;
+        
+        // Initialize event listeners
+        document.addEventListener('DOMContentLoaded', function() {
+            // Panel toggle buttons
+            document.querySelectorAll('.panel-toggle').forEach(button => {
+                button.addEventListener('click', function() {
+                    const panelId = this.getAttribute('data-panel');
+                    togglePanel(panelId);
+                });
+            });
+        });
+        
+        // Toggle panel display
+        function togglePanel(panelId) {
+            const panel = document.getElementById(`${panelId}-panel`);
+            
+            // If clicking the currently active panel, close it
+            if (activePanel === panelId) {
+                panel.style.display = 'none';
+                activePanel = null;
+                return;
+            }
+            
+            // Close any open panel
+            if (activePanel) {
+                const currentPanel = document.getElementById(`${activePanel}-panel`);
+                if (currentPanel) currentPanel.style.display = 'none';
+            }
+            
+            // Open the selected panel
+            panel.style.display = 'block';
+            activePanel = panelId;
+            
+            // Load panel content if needed
+            if (panelId === 'inventory') {
+                fetchInventory();
+            } else if (panelId === 'status') {
+                fetchCharacterStatus();
+            }
+        }
+        
+        // Fetch and display inventory
+        async function fetchInventory() {
+            const inventoryContent = document.getElementById('inventory-content');
+            inventoryContent.innerHTML = '<div class="loading">Loading inventory...</div>';
+            
+            try {
+                const response = await fetch('/api/check_inventory');
+                const data = await response.json();
+                
+                if (!response.ok) {
+                    throw new Error(data.error || 'Failed to fetch inventory');
+                }
+                
+                if (data.inventory && data.inventory.length > 0) {
+                    const itemsGrid = document.createElement('div');
+                    itemsGrid.className = 'items-grid';
+                    
+                    data.inventory.forEach(item => {
+                        const itemElement = document.createElement('div');
+                        itemElement.className = 'item-card';
+                        
+                        let itemHTML = `
+                            <div class="item-name">${item.name || 'Unnamed Item'}</div>
+                            ${item.description ? `<div class="item-description">${item.description}</div>` : ''}
+                            ${item.quantity ? `<div class="item-quantity">Quantity: ${item.quantity}</div>` : ''}
+                            ${item.value ? `<div class="item-value">Value: ${item.value} gold</div>` : ''}
+                        `;
+                        
+                        itemElement.innerHTML = itemHTML;
+                        itemsGrid.appendChild(itemElement);
+                    });
+                    
+                    inventoryContent.innerHTML = '';
+                    inventoryContent.appendChild(itemsGrid);
+                } else {
+                    inventoryContent.innerHTML = '<div class="empty-message">Your inventory is empty.</div>';
+                }
+            } catch (error) {
+                console.error('Error fetching inventory:', error);
+                inventoryContent.innerHTML = `<div class="error-message">Error: ${error.message}</div>`;
+            }
+        }
+        
+        // Fetch and display character status
+        async function fetchCharacterStatus() {
+            const statusContent = document.getElementById('status-content');
+            statusContent.innerHTML = '<div class="loading">Loading character status...</div>';
+            
+            try {
+                // First try the direct status endpoint
+                let response = await fetch('/api/character_status');
+                let data;
+                
+                // If not found, try the console command
+                if (response.status === 404) {
+                    response = await fetch('/api/console_command', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ command: 'status' })
+                    });
+                    data = await response.json();
+                    
+                    if (response.ok && data.response) {
+                        // Display as text if we got a response from console command
+                        statusContent.innerHTML = `<div class="status-text">${data.response.replace(/\n/g, '<br>')}</div>`;
+                        return;
+                    }
+                } else {
+                    data = await response.json();
+                }
+                
+                if (!response.ok) {
+                    throw new Error(data.error || 'Failed to fetch character status');
+                }
+                
+                // If we have structured data, render it
+                if (data.name || data.health !== undefined) {
+                    renderStructuredStatus(data);
+                } else {
+                    // Fallback to text display
+                    statusContent.innerHTML = `<div class="status-text">${JSON.stringify(data, null, 2)}</div>`;
+                }
+            } catch (error) {
+                console.error('Error fetching character status:', error);
+                statusContent.innerHTML = `<div class="error-message">Error: ${error.message}</div>`;
+            }
+        }
+        
+        // Render structured character status
+        function renderStructuredStatus(data) {
+            const statusContent = document.getElementById('status-content');
+            
+            const statusHTML = `
+                <div class="status-card">
+                    <div class="status-header">
+                        <h4>${data.name || 'Adventurer'}</h4>
+                        <span class="level">Level ${data.level || 1}</span>
+                    </div>
+                    
+                    <div class="status-attributes">
+                        ${data.health !== undefined ? `
+                        <div class="attribute">
+                            <span class="label">Health:</span>
+                            <div class="progress-bar">
+                                <div class="progress health" style="width: ${(data.health / (data.max_health || 100) * 100) || 0}%;"></div>
+                                <span class="value">${data.health || 0}/${data.max_health || 100}</span>
+                            </div>
+                        </div>` : ''}
+                        
+                        ${data.mana !== undefined ? `
+                        <div class="attribute">
+                            <span class="label">Mana:</span>
+                            <div class="progress-bar">
+                                <div class="progress mana" style="width: ${(data.mana / (data.max_mana || 100) * 100) || 0}%;"></div>
+                                <span class="value">${data.mana || 0}/${data.max_mana || 100}</span>
+                            </div>
+                        </div>` : ''}
+                        
+                        ${data.experience !== undefined ? `
+                        <div class="attribute">
+                            <span class="label">Experience:</span>
+                            <div class="progress-bar">
+                                <div class="progress exp" style="width: ${(data.experience / (data.experience_to_next || 100) * 100) || 0}%;"></div>
+                                <span class="value">${data.experience || 0}/${data.experience_to_next || 100}</span>
+                            </div>
+                        </div>` : ''}
+                    </div>
+                    
+                    ${(data.attributes || data.strength !== undefined) ? `
+                    <div class="status-stats">
+                        ${data.attributes ? `
+                            ${Object.entries(data.attributes).map(([key, value]) => `
+                                <div class="stat">
+                                    <span class="label">${key.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')}:</span>
+                                    <span class="value">${value}</span>
+                                </div>
+                            `).join('')}
+                        ` : ''}
+                        
+                        ${data.strength !== undefined ? `
+                            <div class="stat">
+                                <span class="label">Strength:</span>
+                                <span class="value">${data.strength}</span>
+                            </div>` : ''}
+                            
+                        ${data.dexterity !== undefined ? `
+                            <div class="stat">
+                                <span class="label">Dexterity:</span>
+                                <span class="value">${data.dexterity}</span>
+                            </div>` : ''}
+                            
+                        ${data.constitution !== undefined ? `
+                            <div class="stat">
+                                <span class="label">Constitution:</span>
+                                <span class="value">${data.constitution}</span>
+                            </div>` : ''}
+                            
+                        ${data.intelligence !== undefined ? `
+                            <div class="stat">
+                                <span class="label">Intelligence:</span>
+                                <span class="value">${data.intelligence}</span>
+                            </div>` : ''}
+                            
+                        ${data.wisdom !== undefined ? `
+                            <div class="stat">
+                                <span class="label">Wisdom:</span>
+                                <span class="value">${data.wisdom}</span>
+                            </div>` : ''}
+                            
+                        ${data.charisma !== undefined ? `
+                            <div class="stat">
+                                <span class="label">Charisma:</span>
+                                <span class="value">${data.charisma}</span>
+                            </div>` : ''}
+                            
+                        ${data.gold !== undefined ? `
+                            <div class="stat gold">
+                                <span class="label">Gold:</span>
+                                <span class="value">${data.gold}</span>
+                            </div>` : ''}
+                    </div>` : ''}
+                    
+                    ${data.equipped ? `
+                    <div class="equipment-section">
+                        <h5>Equipment</h5>
+                        <div class="equipment-grid">
+                            ${data.equipped.weapon ? `
+                            <div class="equipment-item">
+                                <span class="label">Weapon:</span>
+                                <span class="value">${data.equipped.weapon.name || 'None'}</span>
+                                ${data.equipped.weapon.damage ? `<span class="detail">${data.equipped.weapon.damage} damage</span>` : ''}
+                            </div>` : ''}
+                            
+                            ${data.equipped.armor ? `
+                            <div class="equipment-item">
+                                <span class="label">Armor:</span>
+                                <span class="value">${data.equipped.armor.name || 'None'}</span>
+                                ${data.equipped.armor.defense ? `<span class="detail">+${data.equipped.armor.defense} defense</span>` : ''}
+                            </div>` : ''}
+                            
+                            ${data.equipped.accessories && data.equipped.accessories.length > 0 ? `
+                            <div class="equipment-item">
+                                <span class="label">Accessories:</span>
+                                <div class="accessories-list">
+                                    ${data.equipped.accessories.map(acc => `
+                                        <div class="accessory">
+                                            <span class="value">${acc.name || 'Accessory'}</span>
+                                            ${acc.bonus ? `<span class="detail">${acc.bonus}</span>` : ''}
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            </div>` : ''}
+                        </div>
+                    </div>` : ''}
+                    
+                    ${data.location ? `
+                    <div class="location-section">
+                        <div class="location">
+                            <span class="label">Location:</span>
+                            <span class="value">${data.location}</span>
+                        </div>
+                    </div>` : ''}
+                </div>
+            `;
+            
+            statusContent.innerHTML = statusHTML;
+        }
 
         function toggleNPCDialogMode() {
             npcDialogMode = !npcDialogMode;
@@ -507,7 +982,7 @@
             
             // Original command handling
             try {
-                const response = await fetch('/api/command', {
+                const response = await fetch('/api/console_command', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ command })
