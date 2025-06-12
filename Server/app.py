@@ -5,10 +5,13 @@ import os
 
 # Add parent directory to Python path
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from game import RPGGame, Character, Item
+from game import RPGGame, Character, Item, GroqEngine
 
 app = Flask(__name__)
-game = RPGGame()
+
+# Initialize Groq engine and game
+groq_engine = GroqEngine()
+game = RPGGame(groq_engine=groq_engine, save_dir="saves")
 
 @app.route('/')
 def index():

@@ -255,32 +255,70 @@ class GroqEngine:
             except Exception as e:
                 logger.error(f"Failed to initialize Groq client: {e}")
     
-    @cached(cache=LRUCache(maxsize=128))
-    def generate_description(self, prompt: str, context: str = "", max_tokens: int = 150) -> str:
+    @cached(cache=LRUCache(maxsize=128), key=lambda *args, **kwargs: (
+        'generate_description',
+        args[1].get('location', ''),
+        tuple((k, tuple(sorted(v.items())) if isinstance(v, dict) else v) 
+             for k, v in args[1].items() if k != 'location')
+    ))
+    def generate_description(self, context: Dict[str, Any]) -> str:
         """
-        Generate a description using the Groq AI model with caching.
+        Generate a location description using Groq AI.
         
         Args:
-            prompt: The main prompt for generation
-            context: Additional context to include
-            max_tokens: Maximum number of tokens to generate
+            context: A dictionary containing location and NPC information
             
         Returns:
-            Generated text
+            str: Generated description text
         """
         if not self.client:
-            return "Error: Groq client not initialized. Please check your API key."
+            return f"You are in {context.get('location', 'an unknown location')}."
             
         try:
+            # Extract NPC information
+            npcs_info = context.get('npcs', [])
+            npc_descriptions = []
+            
+            for npc in npcs_info:
+                name = npc.get('name', 'Someone')
+                role = npc.get('role', 'person')
+                
+                # Special handling for predefined NPCs
+                if name == "Eldrin":
+                    npc_descriptions.append(f"Eldrin, the town's shopkeeper, is here, surrounded by various wares and potions.")
+                elif name == "Gorak":
+                    npc_descriptions.append(f"Gorak, the guard captain, stands watch with a stern expression.")
+                elif name == "Lily":
+                    npc_descriptions.append(f"Lily, the herbalist, tends to her collection of plants and herbs.")
+                else:
+                    npc_descriptions.append(f"{name} the {role} is here.")
+            
+            # Build the prompt
+            system_prompt = (
+                "You are a creative assistant that generates rich, detailed descriptions of locations in a fantasy RPG. "
+                "Focus on creating an immersive atmosphere with vivid sensory details. "
+                "Keep the description concise but evocative, around 2-3 paragraphs maximum."
+            )
+            
+            user_prompt = f"Describe the location: {context.get('location', 'a place')}"
+            if 'description' in context and context['description']:
+                user_prompt += f"\nBase description: {context['description']}"
+                
+            if npc_descriptions:
+                user_prompt += "\n\nPeople you see here:" + "\n- " + "\n- ".join(npc_descriptions)
+                
+            if 'instructions' in context:
+                user_prompt += f"\n\n{context['instructions']}"
+            
             messages = [
-                {"role": "system", "content": "You are a helpful assistant that generates rich, detailed descriptions."},
-                {"role": "user", "content": f"{context}\n\n{prompt}"}
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": user_prompt}
             ]
             
             response = self.client.chat.completions.create(
                 model=self.model,
                 messages=messages,
-                max_tokens=max_tokens,
+                max_tokens=400,  # Increased for more detailed descriptions
                 temperature=0.7,
                 top_p=0.9
             )
@@ -289,7 +327,11 @@ class GroqEngine:
             
         except Exception as e:
             logger.error(f"Error generating description: {e}")
-            return f"An error occurred while generating the description: {str(e)}"
+            fallback = f"You are in {context.get('location', 'an unknown location')}."
+            if 'npcs' in context and context['npcs']:
+                npc_names = ", ".join([npc.get('name', 'Someone') for npc in context['npcs']])
+                fallback += f" You see {npc_names} here."
+            return fallback
     
     def clear_cache(self) -> None:
         """Clear the description cache."""
@@ -301,15 +343,21 @@ class GroqEngine:
         if not self.client:
             return "The location is dark and foreboding."
 
+        def hashable_list_from_dicts(dicts, key='name'):
+            return tuple(sorted(d[key] for d in dicts if key in d)) if dicts else ()
+
         cache_key_items = []
         if 'name' in context:
             cache_key_items.append(('name', context['name']))
         if 'description' in context:
             cache_key_items.append(('description', context['description']))
         if 'npcs' in context and isinstance(context['npcs'], list):
-            cache_key_items.append(('npcs', tuple(sorted(context['npcs']))))
+            cache_key_items.append(('npcs', hashable_list_from_dicts(context['npcs'])))
         if 'enemies' in context and isinstance(context['enemies'], list):
-            cache_key_items.append(('enemies', tuple(sorted(context['enemies']))))
+            if context['enemies'] and isinstance(context['enemies'][0], dict):
+                cache_key_items.append(('enemies', hashable_list_from_dicts(context['enemies'])))
+            else:
+                cache_key_items.append(('enemies', tuple(sorted(context['enemies']))))
         if 'exits' in context and isinstance(context['exits'], list):
             cache_key_items.append(('exits', tuple(sorted(context['exits']))))
 
@@ -736,6 +784,8 @@ class RPGGame:
         self.groq_engine = groq_engine
         self.save_dir = save_dir
         self.current_player = None
+        self.combat_mode = False
+        self.current_enemy = None
         self.session_history: List[Dict[str, str]] = []
         self.npc_memory = NPCMemory()
         self.game_time = {
@@ -852,34 +902,115 @@ class RPGGame:
         current_loc = self.current_player.current_location
         if not current_loc:
             return "You don't seem to be anywhere specific right now."
-            
-        # Get location details from our locations dictionary
-        location_data = self.locations.get(current_loc)
+        
+        # Get location data and ensure it exists
+        location_data = self.locations.get(current_loc, {})
         if not location_data:
-            return f"You are in {current_loc}, but you can't make out any details."
-            
-        response_parts = [f"You are in {current_loc}."]
-        response_parts.append(location_data.get("description", "It's hard to make out any details."))
+            # If location doesn't exist in our data, create a basic entry
+            location_data = {
+                "description": f"You are in {current_loc}.",
+                "npcs": []
+            }
+            self.locations[current_loc] = location_data
         
-        # Add connections/exits
-        if "connections" in location_data and location_data["connections"]:
-            exits = ", ".join(location_data["connections"])
-            response_parts.append(f"You can go to: {exits}")
+        # Get all NPCs in this location
+        npcs_here = [npc for npc in self.npc_memory.npcs.values() 
+                    if hasattr(npc, 'location') and npc.location.lower() == current_loc.lower()]
         
-        # Add NPCs in this location
-        npcs_here = [npc for npc_name, npc in self.npc_memory.npcs.items() 
-                    if hasattr(npc, 'location') and npc.location == current_loc]
+        # Update location's NPC list
+        location_npcs = []
+        for npc in npcs_here:
+            if npc.name not in location_npcs:
+                location_npcs.append(npc.name)
         
+        # Update location data with current NPCs
+        if "npcs" not in location_data:
+            location_data["npcs"] = []
+        
+        # Add any new NPCs to the location's NPC list
+        for npc_name in location_npcs:
+            if npc_name not in location_data["npcs"]:
+                location_data["npcs"].append(npc_name)
+        
+        # Generate dynamic description based on time of day and NPCs present
+        time_of_day = self._get_time_of_day()
+        description_parts = []
+        
+        # Start with base description if available
+        base_desc = location_data.get("description", f"You are in {current_loc}.")
+        description_parts.append(base_desc)
+        
+        # Add time of day flavor
+        time_flavor = {
+            "morning": "The morning sun casts long shadows across the area.",
+            "day": "The area is bathed in daylight.",
+            "evening": "The setting sun paints the sky in warm colors.",
+            "night": "The area is dimly lit by moonlight and stars."
+        }.get(time_of_day, "")
+        
+        if time_flavor and time_flavor not in description_parts[0]:
+            description_parts.append(time_flavor)
+        
+        # Add NPC descriptions
         if npcs_here:
             npc_descriptions = []
             for npc in npcs_here:
                 role = getattr(npc, 'role', 'person')
-                npc_descriptions.append(f"{npc.name} the {role}")
-            response_parts.append("You see: " + ", ".join(npc_descriptions))
-        else:
-            response_parts.append("You don't see anyone else here.")
+                # Define actions for specific NPCs first
+                specific_actions = {
+                    "Eldrin": ["arranging potions on a shelf", "chatting with customers", "inspecting his wares"],
+                    "Gorak": ["standing at attention", "patrolling the area", "keeping a watchful eye on the town"],
+                    "Lily": ["tending to herbs", "mixing potions", "chatting with visitors"]
+                }
+                
+                # If this is one of our predefined NPCs, use their specific actions
+                if npc.name in specific_actions:
+                    action = random.choice(specific_actions[npc.name])
+                else:
+                    # Fall back to role-based actions for other NPCs
+                    npc_actions = {
+                        "shopkeeper": ["arranging wares on a table", "chatting with customers", "inspecting goods"],
+                        "guard captain": ["giving orders to the guards", "inspecting the town's defenses", "speaking with townsfolk"],
+                        "herbalist": ["sorting herbs", "preparing remedies", "tending to plants"],
+                        "blacksmith": ["hammering at the forge", "shaping metal on an anvil", "tending to the furnace"],
+                        "merchant": ["arranging wares on a table", "chatting with customers", "inspecting goods"],
+                        "guard": ["standing watch", "patrolling the area", "keeping a sharp eye out"],
+                        "mage": ["studying a dusty tome", "muttering incantations", "mixing potions"],
+                        "villager": ["going about their business", "chatting with neighbors", "enjoying the day"]
+                    }
+                    action = random.choice(npc_actions.get(role.lower(), ["standing nearby"]))
+                npc_descriptions.append(f"{npc.name} the {role} is {action}.")
             
+            description_parts.append("\n" + "\n".join(npc_descriptions))
+        else:
+            # Only add this if there are no NPCs and it's not already in the description
+            if "don't see anyone" not in base_desc.lower() and "no one" not in base_desc.lower():
+                description_parts.append("\nYou don't see anyone else here at the moment.")
+        
+        # Update the location description with the new dynamic description
+        location_data["description"] = " ".join(description_parts).strip()
+        
+        # Build the response
+        response_parts = [location_data["description"]]
+        
+        # Add exit information if available
+        if "exits" in location_data and location_data["exits"]:
+            exits = ", ".join(location_data["exits"])
+            response_parts.append(f"\nExits: {exits}")
+        
         return "\n".join(response_parts)
+    
+    def _get_time_of_day(self) -> str:
+        """Return a string representing the current time of day."""
+        hour = self.game_time['hour']
+        if 5 <= hour < 10:
+            return "morning"
+        elif 10 <= hour < 17:
+            return "day"
+        elif 17 <= hour < 21:
+            return "evening"
+        else:
+            return "night"
 
     def _handle_inventory(self, args: List[str]) -> str:
         if not self.current_player:
@@ -1084,6 +1215,73 @@ class RPGGame:
                 
         return result
                 
+    def _extract_and_create_npcs(self, text: str, location: str) -> List[str]:
+        """
+        Extract NPC names from text and create them in the game if they don't exist.
+        
+        Args:
+            text: The text to search for NPC names
+            location: The current location where NPCs should be created
+            
+        Returns:
+            List of NPC names that were found and potentially created
+        """
+        import re
+        
+        # Look for proper nouns that are likely NPC names
+        potential_npcs = re.findall(r'(?<!\.\s)([A-Z][a-z]+(?:\s+[A-Z][a-z]+)*)', text)
+        
+        created_npcs = []
+        
+        # Define predefined NPCs and their roles
+        predefined_npcs = {
+            "Eldrin": {"role": "Shopkeeper", "faction": "merchants"},
+            "Gorak": {"role": "Guard Captain", "faction": "town_guard"},
+            "Lily": {"role": "Herbalist", "faction": "druids"}
+        }
+        
+        # Filter out common false positives and existing NPCs
+        common_false_positives = {'The', 'You', 'I', 'He', 'She', 'It', 'We', 'They', 'This', 'That', 'Here', 'There'}
+        
+        for name in potential_npcs:
+            # Skip if it's a common word or already exists
+            if (name in common_false_positives or 
+                any(npc.name.lower() == name.lower() for npc in self.npc_memory.npcs.values())):
+                continue
+                
+            # Skip if it's a location name
+            if name in self.locations:
+                continue
+                
+            # Check if this is a predefined NPC
+            if name in predefined_npcs:
+                npc_info = predefined_npcs[name]
+                role = npc_info["role"]
+                faction = npc_info["faction"]
+                
+                # Create the predefined NPC with their specific role and faction
+                new_npc = NPC(name, role, location, faction)
+                
+                # Add to NPC memory
+                self.npc_memory.add_npc(new_npc)
+                created_npcs.append(name)
+                
+                # Ensure location exists in self.locations
+                if location not in self.locations:
+                    self.locations[location] = {"description": f"You are in {location}.", "npcs": []}
+                
+                # Add to location's NPC list if not already present (case-insensitive check)
+                if "npcs" not in self.locations[location]:
+                    self.locations[location]["npcs"] = []
+                    
+                if not any(npc.lower() == name.lower() for npc in self.locations[location]["npcs"]):
+                    self.locations[location]["npcs"].append(name)
+                    logger.info(f"Added {name} to {location}'s NPC list")
+                
+                logger.info(f"Created new NPC: {name} the {role} at {location}")
+        
+        return created_npcs
+
     def _handle_talk(self, args: List[str]) -> str:
         """
         Handle conversation with an NPC.
@@ -1166,6 +1364,38 @@ class RPGGame:
                 self.current_player.current_location,
                 relationship_status=disposition
             )
+            
+            # Check for and create any NPCs mentioned in the dialogue
+            created_npcs = self._extract_and_create_npcs(dialogue, self.current_player.current_location)
+            if created_npcs:
+                logger.info(f"Created new NPCs from dialogue: {', '.join(created_npcs)}")
+                # Update the location description to include the new NPCs
+                location = self.current_player.current_location
+                if location in self.locations and "npcs" in self.locations[location]:
+                    npc_list = self.locations[location]["npcs"]
+                    if npc_list:
+                        npc_descriptions = [f"{npc} the {self.npc_memory.get_npc(npc).role if self.npc_memory.get_npc(npc) else 'villager'}" 
+                                           for npc in npc_list if self.npc_memory.get_npc(npc)]
+                        if npc_descriptions:
+                            self.locations[location]["description"] = (
+                                f"You are in {location}. You see {', '.join(npc_descriptions)} here."
+                            )
+            
+            # Check for and create any NPCs mentioned in the dialogue
+            created_npcs = self._extract_and_create_npcs(dialogue, self.current_player.current_location)
+            if created_npcs:
+                logger.info(f"Created new NPCs from dialogue: {', '.join(created_npcs)}")
+                # Update the location description to include the new NPCs
+                location = self.current_player.current_location
+                if location in self.locations and "npcs" in self.locations[location]:
+                    npc_list = self.locations[location]["npcs"]
+                    if npc_list:
+                        npc_descriptions = [f"{npc} the {self.npc_memory.get_npc(npc).role if self.npc_memory.get_npc(npc) else 'villager'}" 
+                                           for npc in npc_list if self.npc_memory.get_npc(npc)]
+                        if npc_descriptions:
+                            self.locations[location]["description"] = (
+                                f"You are in {location}. You see {', '.join(npc_descriptions)} here."
+                            )
             
             # Update relationship based on interaction
             # Positive affinity for general conversation
@@ -1753,12 +1983,26 @@ class RPGGame:
         # Update the last known location
         self._last_known_player_location = location_name
         
+        # Get NPC information with their correct roles
+        npcs_info = []
+        for npc_name in base_location_data.get("npcs", []):
+            npc = self.npc_memory.get_npc(npc_name)
+            if npc:
+                npcs_info.append({
+                    "name": npc.name,
+                    "role": getattr(npc, 'role', 'person'),
+                    "faction": getattr(npc, 'faction', 'neutral')
+                })
+        
         # Generate dynamic description if not in cache
         dynamic_description = self.groq_engine.generate_description({
             "location": location_name,
             "description": base_location_data.get("description", ""),
             "exits": base_location_data.get("exits", []),
-            "npcs": base_location_data.get("npcs", [])
+            "npcs": npcs_info,
+            "instructions": "When describing NPCs, maintain their specified roles. "
+                            "Eldrin is always the shopkeeper, Gorak is always the guard captain, "
+                            "and Lily is always the herbalist."
         })
         
         # Update cache with location data
@@ -2258,7 +2502,9 @@ def display_main_menu(has_character: bool = False):
         print("4. View character status")
         print("5. Look around")
         print("6. Talk to NPC")
-        print("7. Exit game")
+        print("7. Save game")
+        print("8. Load game")
+        print("9. Exit game")
     print()
 
 if __name__ == '__main__':
