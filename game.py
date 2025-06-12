@@ -361,25 +361,52 @@ class GroqEngine:
             return "The location is dark and foreboding."
 
     @functools.lru_cache(maxsize=128)
-    def generate_npc_dialogue(self, npc_name: str, player_name: str, location: str) -> str:
-        """Generate NPC dialogue using Groq AI."""
+    def generate_npc_dialogue(self, npc_name: str, player_name: str, location: str, relationship_status: str = "neutral") -> str:
+        """
+        Generate NPC dialogue using Groq AI.
+        
+        Args:
+            npc_name: Name of the NPC
+            player_name: Name of the player character
+            location: Current location
+            relationship_status: The NPC's disposition toward the player (e.g., 'friendly', 'neutral', 'hostile')
+            
+        Returns:
+            str: The NPC's dialogue response
+        """
         if not self.client:
             return f"{npc_name} looks at you but says nothing."
 
-        cache_key = ("npc_dialogue", npc_name, player_name, location)
+        cache_key = ("npc_dialogue", npc_name, player_name, location, relationship_status)
         if cache_key in self.description_cache:
             return self.description_cache[cache_key]
 
         try:
+            # Base system prompt
+            system_prompt = f"""You are {npc_name}, a character in a fantasy RPG. 
+            You are currently in {location}. {player_name} is talking to you. 
+            Your current relationship with {player_name} is {relationship_status}.
+            Respond naturally to what they say, keeping responses brief (1-2 sentences)."""
+            
+            # Adjust tone based on relationship status
+            if relationship_status == "friendly":
+                system_prompt += " You are warm and helpful toward them."
+            elif relationship_status == "hostile":
+                system_prompt += " You are suspicious or unfriendly toward them."
+            elif relationship_status == "neutral":
+                system_prompt += " You are polite but cautious with them."
+                
             response = self.client.chat.completions.create(
                 model=self.model,
                 messages=[
-                    {"role": "system", "content": f"You are {npc_name}, a character in a fantasy RPG. Respond naturally to the player. Keep your response under 500 characters."},
-                    {"role": "user", "content": f"Player {player_name} approaches you in {location}. What do you say?"}
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": f"{player_name} greets you."}
                 ],
                 temperature=0.8,
-                max_tokens=500,
-                stream=False
+                max_tokens=150,
+                top_p=1.0,
+                frequency_penalty=0.5,
+                presence_penalty=0.5,
             )
             
             if not response or not hasattr(response, 'choices') or not response.choices:
@@ -1721,41 +1748,30 @@ class RPGGame:
                 "dynamic_description": "It's an unfamiliar place."
             }
             self._last_known_player_location = location_name
-        # Update the last known location
-        self._last_known_player_location = destination
-
-        # Update session memory with the move action
-        self.update_session_memory(
-            f"moved to {destination}",
-            f"Arrived at {destination}. {new_location.get('description', '')}"
-        )
-
-        return "\n".join(response_parts)
-
-        # Generic action processing for commands not handled above
-        # Define command prefixes that constitute a general player action
-        action_prefixes = ["attack", "use", "cast", "open", "climb", "read", "give", "take", "drop", "examine"]
-        # Exclude commands that are definitely not single turn actions handled by generate_action_description
-        non_action_commands = ["go", "talk", "look", "inventory", "status", "help", "exit", "equip"]
-
-        is_general_action = False
-        if not any(command.startswith(nac) for nac in non_action_commands): # if not a navigation/meta command
-            if any(command.startswith(ap) for ap in action_prefixes): # and is an action type command
-                 is_general_action = True
-            elif len(command.split()) == 1 and command not in non_action_commands: # also consider single word commands as actions if not meta
-                is_general_action = True
-
-
-        if self.current_player and is_general_action:
-            player_tuple = (
-                self.current_player.name,
-                self.current_player.character_class,
-                self.current_player.level
-            )
-            # 'command' is the raw user input string, e.g., "attack goblin" or "examine sword"
-            return self.groq_engine.generate_action_description(player_tuple, command)
+            return self._current_location_cache
             
-        return f"I don't understand '{command}'. Type 'help' for a list of commands."
+        # Update the last known location
+        self._last_known_player_location = location_name
+        
+        # Generate dynamic description if not in cache
+        dynamic_description = self.groq_engine.generate_description({
+            "location": location_name,
+            "description": base_location_data.get("description", ""),
+            "exits": base_location_data.get("exits", []),
+            "npcs": base_location_data.get("npcs", [])
+        })
+        
+        # Update cache with location data
+        self._current_location_cache = {
+            "name": location_name,
+            "description": base_location_data.get("description", ""),
+            "dynamic_description": dynamic_description,
+            "exits": base_location_data.get("exits", []),
+            "npcs": base_location_data.get("npcs", []),
+            "items": base_location_data.get("items", [])
+        }
+
+        return self._current_location_cache
 
     def handle_attack(self) -> str:
         """Handle player attack during combat."""
