@@ -1221,7 +1221,23 @@
                         `${data.npc_name} (${data.npc_role}): ${data.dialogue}`);
                     
                 } catch (error) {
-                    addConsoleMessage(CONSOLE_TYPES.ERROR, error.message);
+                    let errorMessage = error.message;
+                    try {
+                        // Try to parse the error response if it's JSON
+                        const errorData = JSON.parse(error.message);
+                        if (errorData.error_code === 'use_npc_button' || 
+                            errorData.error.includes('relationship_status')) {
+                            errorMessage = "Please use the 'Talk to NPC' button at the top to interact with NPCs";
+                        } else {
+                            errorMessage = errorData.error || error.message;
+                        }
+                    } catch (e) {
+                        // If it's not JSON or parsing fails, use the original error message
+                        if (errorMessage.includes('relationship_status')) {
+                            errorMessage = "Please use the 'Talk to NPC' button at the top to interact with NPCs";
+                        }
+                    }
+                    addConsoleMessage(CONSOLE_TYPES.ERROR, errorMessage);
                 }
                 return;
             }
@@ -1239,8 +1255,19 @@
                 });
 
                 if (!response.ok) {
-                    const errorText = await response.text();
-                    throw new Error(errorText || 'Failed to process command');
+                    try {
+                        const errorData = await response.json();
+                        if (errorData.error && errorData.error.includes('relationship_status')) {
+                            throw new Error("Please use the 'Talk to NPC' button at the top to interact with NPCs");
+                        }
+                        throw new Error(errorData.error || 'Failed to process command');
+                    } catch (e) {
+                        const errorText = await response.text();
+                        if (errorText.includes('relationship_status')) {
+                            throw new Error("Please use the 'Talk to NPC' button at the top to interact with NPCs");
+                        }
+                        throw new Error(errorText || 'Failed to process command');
+                    }
                 }
 
                 const reader = response.body.getReader();

@@ -245,6 +245,12 @@ def get_npc_dialogue():
         return jsonify({"error": f"NPC '{npc_name}' not found in {game.current_player.current_location}"}), 400
 
     try:
+        # Check if this is coming from the console command (which might pass relationship_status)
+        if 'relationship_status' in data:
+            return jsonify({
+                "error": "Please use the 'Talk to NPC' button to interact with NPCs"
+            }), 400
+
         # Get the actual NPC name with correct casing
         actual_npc_name = next((npc for npc in location_data.get("npcs", []) 
                               if npc.lower() == npc_name.lower()), npc_name)
@@ -274,8 +280,17 @@ def get_npc_dialogue():
         })
         
     except Exception as e:
-        app.logger.error("Error in /api/get_npc_dialogue for NPC '%s': %s", npc_name, str(e), exc_info=True)
-        return jsonify({"error": f"Failed to generate NPC dialogue: {str(e)}"}), 500
+        error_msg = str(e)
+        app.logger.error("Error in /api/get_npc_dialogue for NPC '%s': %s", npc_name, error_msg, exc_info=True)
+        
+        # Check for the specific error about relationship_status
+        if "unexpected keyword argument 'relationship_status'" in error_msg:
+            return jsonify({
+                "error": "Please use the 'Talk to NPC' button to interact with NPCs",
+                "error_code": "use_npc_button"
+            }), 400
+            
+        return jsonify({"error": f"Failed to generate NPC dialogue: {error_msg}"}), 500
 
 @app.route('/api/move_player', methods=['POST'])
 def move_player():

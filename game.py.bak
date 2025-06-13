@@ -1732,29 +1732,38 @@ class RPGGame:
         if command not in ["look", "l", "inventory", "i", "status", "stats", "help", "h"]:
             self.advance_time()
         
-        # Handle the command
+        # Check for NPC interaction patterns (e.g., "talk to npc" or "npc_name, hello")
+        if ',' in user_input or any(word in user_input.lower() for word in ["talk to", "say to", "tell"]):
+            return "Please use the 'Talk to NPC' button at the top to interact with NPCs."
+            
+        # Check for command handlers first
         handler = self.command_handlers.get(command)
         if handler:
             return handler(args)
             
-        # Check for movement commands (go to location name)
-        if command in ["go", "move", "travel"] and args:
-            return self._handle_go(args)
-            
-        # If no command matched, try to handle as a general action
-        if hasattr(self, '_handle_general_action'):
-            return self._handle_general_action(user_input)
-            
-        # If no specific handler and no general action handler, try to generate a description
+        # If no command handler matches, check if this is an NPC interaction
         if self.current_player:
+            location_data = self.get_current_location()
+            if location_data and 'npcs' in location_data:
+                # Check if the input starts with an NPC's name
+                for npc in location_data['npcs']:
+                    if user_input.lower().startswith(npc.lower()):
+                        return f"To talk to {npc}, please use the 'Talk to NPC' button at the top."
+            
+            # If not an NPC interaction, use Groq AI for natural language processing
             player_tuple = (
                 self.current_player.name,
                 self.current_player.character_class,
                 self.current_player.level
             )
             # Pass the original, un-lowercased, stripped input for more natural AI descriptions
-            return self.groq_engine.generate_action_description(player_tuple, user_input.strip())
-            
+            try:
+                return self.groq_engine.generate_action_description(player_tuple, user_input.strip())
+            except Exception as e:
+                if 'relationship_status' in str(e):
+                    return "Please use the 'Talk to NPC' button at the top to interact with NPCs."
+                raise
+                
         return f"I don't understand '{user_input}'. Type 'help' for a list of commands."
 
     # def load_rules(self): # This method is no longer needed due to LazyRuleLoader
