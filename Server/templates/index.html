@@ -471,12 +471,27 @@
         
         // Add message to console with type
         function addConsoleMessage(type, message) {
-            const messageDiv = document.createElement('div');
-            messageDiv.className = `console-${type}`;
+            // Try to find an existing message div of the same type
+            let messageDiv = consoleOutputElement.querySelector(`.console-${type}`);
+            
+            // If no existing message div of this type, create a new one
+            if (!messageDiv) {
+                messageDiv = document.createElement('div');
+                messageDiv.className = `console-${type}`;
+                consoleOutputElement.appendChild(messageDiv);
+            }
+            
             // Preserve newlines in the message
             const formattedMessage = message.replace(/\n/g, '<br>');
-            messageDiv.innerHTML = formattedMessage; // Use innerHTML to render <br> tags
-            consoleOutputElement.appendChild(messageDiv);
+            
+            // If there's existing content, add a line break before appending
+            if (messageDiv.innerHTML) {
+                messageDiv.innerHTML += '<br><br>' + formattedMessage;
+            } else {
+                messageDiv.innerHTML = formattedMessage;
+            }
+            
+            // Scroll to the bottom of the console
             consoleOutputElement.scrollTop = consoleOutputElement.scrollHeight;
         }
 
@@ -902,13 +917,16 @@
             }
         }
 
-        // Modify the sendConsoleCommand function to handle NPC dialog mode
+        // Modify the sendConsoleCommand function to handle NPC dialog mode and streaming responses
         async function sendConsoleCommand() {
             const input = document.getElementById('console-input');
             const command = input.value.trim();
             
             if (!command) return;
 
+            // Clear input
+            input.value = '';
+            
             // Add command to console
             addConsoleMessage(CONSOLE_TYPES.COMMAND, `> ${command}`);
 
@@ -980,37 +998,133 @@
                 return;
             }
             
-            // Original command handling
+            // Handle regular commands with SSE stream
             try {
                 const response = await fetch('/api/console_command', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ command })
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        command: command
+                    })
                 });
-                
-                const data = await response.json();
-                
+
                 if (!response.ok) {
-                    throw new Error(data.error || 'Command failed');
+                    const errorText = await response.text();
+                    throw new Error(errorText || 'Failed to process command');
+                }
+
+                const reader = response.body.getReader();
+                const decoder = new TextDecoder('utf-8');
+                let buffer = '';
+
+                while (true) {
+                    const { done, value } = await reader.read();
+                    if (done) break;
+
+                    // Decode the chunk of data and add it to the buffer
+                    buffer += decoder.decode(value, { stream: true });
+
+                    // Split the buffer into lines (SSE messages are double-newline delimited)
+                    const lines = buffer.split('\n\n');
+                    buffer = lines.pop(); // Keep incomplete chunk for next iteration
+
+                    // Process each complete message
+                    for (const line of lines) {
+                        if (line.startsWith('data: ')) {
+                            try {
+                                const jsonStr = line.replace(/^data: /, '');
+                                const message = JSON.parse(jsonStr);
+
+                                // Handle different message types
+                                switch(message.type) {
+                                    case 'response':
+                                    case 'combat_description':
+                                    case 'combat_result':
+                                        addConsoleMessage(CONSOLE_TYPES.RESPONSE, message.content);
+                                        break;
+                                    case 'game_state':
+                                        // Update UI with new game state if needed
+                                        if (message.content && message.content.player) {
+                                            updatePlayerStatus(message.content.player);
+                                        }
+                                        break;
+                                    case 'error':
+                                        addConsoleMessage(CONSOLE_TYPES.ERROR, message.content);
+                                        break;
+                                    default:
+                                        // For any other type, just show the content
+                                        addConsoleMessage(CONSOLE_TYPES.RESPONSE, message.content || 'Command executed');
+                                }
+                            } catch (err) {
+                                console.error('Failed to parse SSE message:', err, line);
+                                addConsoleMessage(CONSOLE_TYPES.ERROR, 'Error processing server response');
+                            }
+                        }
+                    }
                 }
                 
-                // Add response to console
-                addConsoleMessage(CONSOLE_TYPES.RESPONSE, data.response);
+                // Process any remaining data in the buffer
+                if (buffer.trim()) {
+                    try {
+                        const message = JSON.parse(buffer);
+                        addConsoleMessage(CONSOLE_TYPES.RESPONSE, message.content || 'Command executed');
+                    } catch (e) {
+                        console.error('Failed to parse final buffer:', e);
+                    }
+                }
+                
             } catch (error) {
-                addConsoleMessage(CONSOLE_TYPES.ERROR, error.message);
+                console.error('Error sending command:', error);
+                addConsoleMessage(CONSOLE_TYPES.ERROR, error.message || 'Failed to send command');
             }
         }
 
         async function lookAround() {
+            const consoleContainer = document.getElementById("console-output");
+
             try {
-                const response = await fetch('/api/look_around', {
+                const response = await fetch("/api/look_around", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    }
+                });
+
+                const data = await response.json();
+                if (response.ok) {
+                    const description = data.description;
+
+                    // Find existing .console-response or create one if it doesn't exist
+                    let responseDiv = consoleContainer.querySelector(".console-response");
+                    if (!responseDiv) {
+                        responseDiv = document.createElement("div");
+                        responseDiv.classList.add("console-response");
+                        consoleContainer.appendChild(responseDiv);
+                    }
+
+                    // Append new description text
+                    responseDiv.textContent += `\n${description}`;
+
+                } else {
+                    console.error(data.error);
+                }
+            } catch (error) {
+                console.error("Error:", error);
+            }
+        }
+
+        async function playerAttack() {
+            try {
+                const response = await fetch('/api/player_attack', {
                     method: 'POST'
                 });
                 
                 const data = await response.json();
                 
                 if (!response.ok) {
-                    throw new Error(data.error || 'Failed to look around');
+                    throw new Error(data.error || 'Failed player attack');
                 }
                 
                 addConsoleMessage(CONSOLE_TYPES.RESPONSE, data.description);

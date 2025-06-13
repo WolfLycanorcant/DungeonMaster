@@ -69,93 +69,114 @@ def get_enemy_status():
         })
     return jsonify({"error": "No enemy in combat"}), 400
 
-@app.route('/api/console_command', methods=['POST'])
-def console_command():
+from flask import Response, stream_with_context
+import json
+
+def generate_stream_response(command, game):
     try:
-        data = request.get_json()
-        if not data or 'command' not in data:
-            return jsonify({"error": "No command provided"}), 400
+        # Create context for command processing
+        context = {
+            "player": {
+                "name": game.current_player.name if game.current_player else "Unknown",
+                "class": game.current_player.character_class if game.current_player else "Unknown",
+                "level": game.current_player.level if game.current_player else 0
+            },
+            "current_location": game.current_player.current_location if game.current_player else "Unknown",
+            "combat_mode": game.combat_mode
+        }
 
-        command = data['command'].lower()
+        # Check for movement commands with various prefixes
+        movement_prefixes = [
+            'go ', 'walk ', 'travel ', 'move ', 'head ', 'proceed to ', 'enter ', 'goto '
+        ]
 
-        # Process command using RPGGame's process_input method
-        response = game.process_input(
-            command,
-            {
-                "player": {
-                    "name": game.current_player.name if game.current_player else "Unknown",
-                    "class": game.current_player.character_class if game.current_player else "Unknown",
-                    "level": game.current_player.level if game.current_player else 0
-                },
-                "current_location": game.current_player.current_location if game.current_player else "Unknown",
-                "combat_mode": game.combat_mode
-            }
-        )
+        # Check if command starts with any movement prefix
+        is_movement = False
+        for prefix in movement_prefixes:
+            if command.lower().startswith(prefix.lower()):
+                is_movement = True
+                break
 
-        # Process game state changes based on command
-        if command.startswith("go "):
-            destination = command[3:].strip()
-            game_response = game.move_player(destination)
-            # This check might be problematic if game_response can be a non-error string that shouldn't just be appended
-            # if "error" not in game_response:
-            # For now, assuming game_response is either an error string or a success string from move_player
-            response = game_response # game.move_player now returns the full descriptive string
-        elif command.startswith("talk to"):
-            # This part is handled by process_input calling game.groq_engine.generate_npc_dialogue
-            # The 'response' from process_input will already contain the dialogue.
-            pass # No additional action needed here as process_input handles it.
-        elif command == "attack" and game.combat_mode:
-            # Create hashable tuples for the new cached generate_combat_description method
+        # If it's a movement command, process it directly with process_input
+        # to let the game's _handle_go method handle the parsing
+        if is_movement:
+            response = game.process_input(command, context)
+            yield f"data: {json.dumps({'type': 'response', 'content': response})}\n\n"
+            return
+
+        # Process command and yield response
+        response = game.process_input(command, context)
+        yield f"data: {json.dumps({'type': 'response', 'content': response})}\n\n"
+        
+        # Special handling for combat
+        if command == "attack" and game.combat_mode:
             player_tuple = (
                 game.current_player.name,
                 game.current_player.character_class,
                 game.current_player.level,
-                game.current_player.hit_points # Current HP
+                game.current_player.hit_points
             )
-            # Assuming current_enemy has 'name', 'level', 'hit_points' attributes
-            # If current_enemy structure is different, this needs adjustment.
-            # Based on game.py's enemies dict, 'level' and 'hit_points' are top-level after selecting an enemy.
-            # Let's assume game.current_enemy is an object with these attributes, similar to Character.
-            # If game.current_enemy is just a dict from self.enemies, then access would be game.current_enemy['name'], etc.
-            # Given the previous attempt to pass a dict, game.current_enemy is likely an object or a populated dict.
-            # For consistency with player_tuple and GroqEngine method, let's assume it has these attributes.
-            # If game.current_enemy might not have a 'level' (e.g. if it's a unique creature not from a template),
-            # provide a default.
-            # Assuming game.current_enemy is a dictionary taken from game.enemies
-            # The 'name' is often the key used to fetch the enemy dict, so it might not be in the dict itself.
-            # This needs clarification on how current_enemy is structured/named.
-            # For now, let's assume current_enemy dict has a 'name_in_dict' field or we use a placeholder.
-            # However, game.handle_attack() uses self.current_enemy.name, suggesting it should be available.
-            # Let's assume self.current_enemy = {"name": "Goblin", "level": 1, "hit_points": 10, ...}
-
+            
             enemy_name = game.current_enemy.get('name', 'Unknown Enemy') if isinstance(game.current_enemy, dict) else getattr(game.current_enemy, 'name', 'Unknown Enemy')
             enemy_level = game.current_enemy.get('level', 'N/A') if isinstance(game.current_enemy, dict) else getattr(game.current_enemy, 'level', 'N/A')
             enemy_hp = game.current_enemy.get('hit_points', 'N/A') if isinstance(game.current_enemy, dict) else getattr(game.current_enemy, 'hit_points', 'N/A')
 
-            enemy_tuple = (
-                enemy_name, # Name of the specific enemy instance
-                enemy_level,
-                enemy_hp
-            )
-
+            enemy_tuple = (enemy_name, enemy_level, enemy_hp)
+            
+            # Stream combat description
             combat_desc = game.groq_engine.generate_combat_description(player_tuple, enemy_tuple)
-            combat_result = game.handle_attack() # This likely modifies HP
-            response = f"{combat_desc}\n\n{combat_result}"
+            yield f"data: {json.dumps({'type': 'combat_description', 'content': combat_desc})}\n\n"
+            
+            # Stream combat result
+            combat_result = game.handle_attack()
+            yield f"data: {json.dumps({'type': 'combat_result', 'content': combat_result})}\n\n"
+        # Handle all other commands
+        else:
+            response = game.process_input(command, context)
+            if response:
+                yield f"data: {json.dumps({'type': 'response', 'content': response})}\n\n"
 
-        return jsonify({
-            "response": response,
-            "game_state": {
-                "player": {
-                    "name": game.current_player.name if game.current_player else None,
-                    "health": game.current_player.hit_points if game.current_player else None,
-                    "level": game.current_player.level if game.current_player else None
+        # Send final game state update
+        if game.current_player:
+            game_state = {
+                'type': 'game_state',
+                'content': {
+                    'player': {
+                        'name': game.current_player.name,
+                        'health': game.current_player.hit_points,
+                        'level': game.current_player.level,
+                        'location': game.current_player.current_location
+                    },
+                    'combat_mode': game.combat_mode
                 }
             }
-        })
-
+            yield f"data: {json.dumps(game_state)}\n\n"
+            
     except Exception as e:
-        app.logger.error("Error in /api/console_command: %s", str(e), exc_info=True)
-        return jsonify({"error": str(e)}), 500
+        app.logger.error("Error in command processing: %s", str(e), exc_info=True)
+        yield f"data: {json.dumps({'type': 'error', 'content': str(e)})}\n\n"
+    finally:
+        yield "data: {\"type\": \"end\"}\n\n"
+
+@app.route('/api/console_command', methods=['POST'])
+def console_command():
+    data = request.get_json()
+    if not data or 'command' not in data:
+        return jsonify({"error": "No command provided"}), 400
+
+    command = data['command'].strip()
+    if not command:
+        return jsonify({"error": "Empty command"}), 400
+
+    return Response(
+        stream_with_context(generate_stream_response(command, game)),
+        mimetype='text/event-stream',
+        headers={
+            'Cache-Control': 'no-cache',
+            'Connection': 'keep-alive',
+            'X-Accel-Buffering': 'no'  # Disable buffering in nginx if used
+        }
+    )
 
 @app.route('/api/look_around', methods=['POST'])
 def look_around():

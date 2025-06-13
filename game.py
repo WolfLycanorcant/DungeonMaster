@@ -1235,38 +1235,58 @@ class RPGGame:
         if not args:
             return "Where would you like to go?"
             
-        destination = " ".join(args)
+        # Handle different command formats: "go to the X", "go to X", or "go X"
+        if len(args) >= 3 and args[0].lower() == 'to' and args[1].lower() == 'the':
+            destination = " ".join(args[2:])  # "go to the mountain pass" -> "mountain pass"
+        elif len(args) >= 2 and args[0].lower() == 'to':
+            destination = " ".join(args[1:])   # "go to mountain pass" -> "mountain pass"
+        else:
+            destination = " ".join(args)        # "go mountain pass" -> "mountain pass"
+            
         current_location = self.current_player.current_location
         
-        # Move to the new location
-        result = self.move_player(destination)
+        # Normalize the destination to match the case in connections
+        location_data = self.locations.get(current_location, {})
+        connections = location_data.get('connections', [])
         
-        # Get current location after movement
-        new_location = self.current_player.current_location
+        # Find case-insensitive match in connections
+        normalized_connections = {loc.lower(): loc for loc in connections}
         
-        # If location changed, update session memory and advance time
-        if current_location != new_location:
-            self.advance_time()  # Advance time when changing locations
-            self.update_session_memory(
-                f"traveled from {current_location} to {new_location}",
-                f"Arrived at {new_location}."
-            )
+        if destination.lower() in normalized_connections:
+            # Use the properly cased version from connections
+            destination = normalized_connections[destination.lower()]
             
-            # Update location memory and add discovery event if first visit
-            self.update_location_memory(new_location)
-            if 'visited_locations' not in self.session_memory:
-                self.session_memory['visited_locations'] = set()
-                
-            if new_location not in self.session_memory['visited_locations']:
-                self.session_memory['visited_locations'].add(new_location)
-                self.add_important_event(
-                    event_type="discovery",
-                    description=f"Discovered {new_location}",
-                    location=new_location,
-                    importance=7
+            # Move to the new location
+            result = self.move_player(destination)
+            
+            # Get current location after movement
+            new_location = self.current_player.current_location
+            
+            # If location changed, update session memory and advance time
+            if current_location != new_location:
+                self.advance_time()  # Advance time when changing locations
+                self.update_session_memory(
+                    f"traveled from {current_location} to {new_location}",
+                    f"Arrived at {new_location}."
                 )
                 
-        return result
+                # Update location memory and add discovery event if first visit
+                self.update_location_memory(new_location)
+                if 'visited_locations' not in self.session_memory:
+                    self.session_memory['visited_locations'] = set()
+                    
+                if new_location not in self.session_memory['visited_locations']:
+                    self.session_memory['visited_locations'].add(new_location)
+                    self.add_important_event(
+                        event_type="discovery",
+                        description=f"Discovered {new_location}",
+                        location=new_location,
+                        importance=7
+                    )
+            
+            return result
+        else:
+            return f"You can't go to {destination} from here. Available locations: {', '.join(connections)}"
                 
     def _extract_and_create_npcs(self, text: str, location: str) -> List[str]:
         """
