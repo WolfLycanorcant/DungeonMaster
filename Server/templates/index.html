@@ -950,26 +950,8 @@
             
             try {
                 // First try the direct status endpoint
-                let response = await fetch('/api/character_status');
-                let data;
-                
-                // If not found, try the console command
-                if (response.status === 404) {
-                    response = await fetch('/api/console_command', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ command: 'status' })
-                    });
-                    data = await response.json();
-                    
-                    if (response.ok && data.response) {
-                        // Display as text if we got a response from console command
-                        statusContent.innerHTML = `<div class="status-text">${data.response.replace(/\n/g, '<br>')}</div>`;
-                        return;
-                    }
-                } else {
-                    data = await response.json();
-                }
+                let response = await fetch('/api/get_player_status');
+                let data = await response.json();
                 
                 if (!response.ok) {
                     throw new Error(data.error || 'Failed to fetch character status');
