@@ -850,18 +850,38 @@ class RPGGame:
         # Ensure save directory exists
         os.makedirs(self.save_dir, exist_ok=True)
         self.command_handlers = {
+            # Movement and location
             "look": self._handle_look,
             "l": self._handle_look,
             "go": self._handle_go,
             "move": self._handle_go,
             "travel": self._handle_go,
+            "location": self._handle_location,  # Show current location
+            "where am i": self._handle_location,  # Natural language for location
+            
+            # Inventory and equipment
             "inventory": self._handle_inventory,
             "i": self._handle_inventory,
             "equip": self._handle_equip,
+            
+            # Character status
             "status": self._handle_status,
             "stats": self._handle_status,
+            
+            # NPC interaction
             "talk": self._handle_talk,
+            "npc": self._handle_npc_info,
+            "npcs": self._handle_npcs,
+            
+            # Time
             "time": self._handle_time,
+            "what time is it": self._handle_time,  # Natural language time command
+            
+            # Navigation
+            "exits": self._handle_exits,   # Show available exits
+            "locations": self._handle_exits, # Alias for exits
+            
+            # Game management
             "save": self._handle_save,
             "load": self._handle_load,
             "saves": self._handle_list_saves,
@@ -869,7 +889,6 @@ class RPGGame:
             "h": self._handle_help,
             "exit": self._handle_exit,
             "quit": self._handle_exit,
-            "npc": self._handle_npc_info,  # New command for NPC info
         }
         self.session_memory = {
             "actions": [],
@@ -900,7 +919,7 @@ class RPGGame:
             "Starting Town": {
                 "description": "A small, peaceful town with a few shops and houses. The town square is bustling with activity. The cobblestone streets are lined with colorful market stalls, and the scent of freshly baked bread wafts from the local bakery. To the north stands a sturdy blacksmith's forge, while to the east you can see the apothecary's shop with its colorful bottles in the window. The sound of cheerful music and raucous laughter draws your attention to 'The Tipsy Traveler' tavern, where the warm glow of the hearth spills out through its inviting windows. The friendly bartender, Branwen, is known for her hearty stew and local gossip.",
                 "connections": ["Forest Clearing", "Mountain Pass", "Riverside Dock", "Blacksmith's Forge", "Apothecary's Shop", "The Tipsy Traveler Tavern"],
-                "npcs": ["Eldrin", "Gorak", "Marla"]
+                "npcs": ["Eldrin", "Gorak", "Marla", "Thorik", "Branwen"]
             },
             "Blacksmith's Forge": {
                 "description": "The heat from the forge hits you as you enter the blacksmith's workshop. The walls are lined with tools and weapons in various stages of completion. The blacksmith looks up from their work as you enter.",
@@ -1574,9 +1593,22 @@ class RPGGame:
         if not user_input.strip():
             return "Please enter a command. Type 'help' for a list of commands."
             
-        # Split the input into command and arguments
-        parts = user_input.strip().split()
-        command = parts[0].lower()
+        # Convert to lowercase for case-insensitive matching
+        input_lower = user_input.strip().lower()
+        
+        # First try to find a multi-word command match (like 'what time is it')
+        for cmd in self.command_handlers:
+            if ' ' in cmd and input_lower.startswith(cmd):
+                # Extract arguments after the command
+                args = user_input[len(cmd):].strip().split()
+                try:
+                    return self.command_handlers[cmd](args)
+                except Exception as e:
+                    return f"Error executing command: {str(e)}"
+        
+        # If no multi-word command matched, split into command and arguments
+        parts = input_lower.split()
+        command = parts[0]
         args = parts[1:] if len(parts) > 1 else []
         
         # Check if the command exists in the command handlers
@@ -1589,6 +1621,118 @@ class RPGGame:
                 return f"An error occurred while processing your command: {str(e)}"
         else:
             return f"Unknown command: {command}. Type 'help' for a list of available commands."
+
+    def _handle_time(self, args: List[str]) -> str:
+        """
+        Display the current in-game time and time of day.
+        
+        Args:
+            args: Not used
+            
+        Returns:
+            str: Current in-game time and time of day
+        """
+        time_str = self.get_current_time_str()
+        time_of_day = self._get_time_of_day()
+        return f"Current time: {time_str} ({time_of_day.capitalize()})"
+
+    def _handle_location(self, args: List[str]) -> str:
+        """
+        Show the player's current location with description.
+        
+        Args:
+            args: Not used
+            
+        Returns:
+            str: Current location description
+        """
+        if not self.current_player:
+            return "You need to create a character first."
+            
+        current_location = self.current_player.current_location
+        location_data = self.locations.get(current_location, {})
+        
+        # Get time of day for description
+        time_of_day = self._get_time_of_day()
+        
+        # Build the response
+        response = [f"You are in {current_location}."]
+        
+        # Add time of day flavor text if available
+        if "descriptions" in location_data and time_of_day in location_data["descriptions"]:
+            response.append(location_data["descriptions"][time_of_day])
+        elif "description" in location_data:
+            response.append(location_data["description"])
+            
+        # Add NPCs in the location if any
+        npcs = location_data.get("npcs", [])
+        if npcs:
+            npc_list = ", ".join(npcs)
+            response.append(f"\nYou see here: {npc_list}")
+            
+        return "\n".join(response)
+
+    def _handle_exits(self, args: List[str]) -> str:
+        """
+        Show available exits from the current location.
+        
+        Args:
+            args: Not used
+            
+        Returns:
+            str: List of available exits
+        """
+        if not self.current_player:
+            return "You need to create a character first."
+            
+        current_location = self.current_player.current_location
+        location_data = self.locations.get(current_location, {})
+        
+        # First check for explicit exits
+        if "exits" in location_data and location_data["exits"]:
+            exits = ", ".join(location_data["exits"])
+            return f"Available exits: {exits}"
+            
+        # Fall back to connections if no explicit exits
+        if "connections" in location_data and location_data["connections"]:
+            exits = ", ".join(location_data["connections"])
+            return f"Available exits: {exits}"
+            
+        return f"There are no visible exits from {current_location}."
+
+    def _handle_npcs(self, args: List[str]) -> str:
+        """
+        List all NPCs in the current location.
+        
+        Args:
+            args: Not used
+            
+        Returns:
+            str: List of NPCs in the current location
+        """
+        if not self.current_player:
+            return "You need to create a character first."
+            
+        current_location = self.current_player.current_location
+        location_data = self.locations.get(current_location, {})
+        
+        # Get NPCs from location data
+        npc_names = location_data.get('npcs', [])
+        
+        if not npc_names:
+            return f"There are no NPCs in {current_location} right now."
+            
+        # Get NPC details from NPC memory
+        npcs = []
+        for npc_name in npc_names:
+            npc = self.npc_memory.get_npc(npc_name)
+            if npc:
+                role = getattr(npc, 'role', 'person')
+                npcs.append(f"- {npc_name} (the {role})")
+            else:
+                npcs.append(f"- {npc_name}")
+        
+        return f"NPCs in {current_location}:\n" + "\n".join(npcs)
 
     def _handle_npc_info(self, args: List[str]) -> str:
         """
