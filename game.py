@@ -898,9 +898,24 @@ class RPGGame:
         """Initialize game locations with their descriptions and connections."""
         self.locations = {
             "Starting Town": {
-                "description": "A small, peaceful town with a few shops and houses. The town square is bustling with activity.",
-                "connections": ["Forest Clearing", "Mountain Pass"],
-                "npcs": ["Eldrin", "Gorak"]
+                "description": "A small, peaceful town with a few shops and houses. The town square is bustling with activity. The cobblestone streets are lined with colorful market stalls, and the scent of freshly baked bread wafts from the local bakery. To the north stands a sturdy blacksmith's forge, while to the east you can see the apothecary's shop with its colorful bottles in the window. The sound of cheerful music and raucous laughter draws your attention to 'The Tipsy Traveler' tavern, where the warm glow of the hearth spills out through its inviting windows. The friendly bartender, Branwen, is known for her hearty stew and local gossip.",
+                "connections": ["Forest Clearing", "Mountain Pass", "Riverside Dock", "Blacksmith's Forge", "Apothecary's Shop", "The Tipsy Traveler Tavern"],
+                "npcs": ["Eldrin", "Gorak", "Marla"]
+            },
+            "Blacksmith's Forge": {
+                "description": "The heat from the forge hits you as you enter the blacksmith's workshop. The walls are lined with tools and weapons in various stages of completion. The blacksmith looks up from their work as you enter.",
+                "connections": ["Starting Town"],
+                "npcs": ["Thorik"]
+            },
+            "Apothecary's Shop": {
+                "description": "The apothecary's shop is filled with the scent of dried herbs and potions. Shelves line the walls, packed with jars of mysterious ingredients and colorful liquids. The apothecary is busy at work behind the counter.",
+                "connections": ["Starting Town"],
+                "npcs": ["Eldrin"]
+            },
+            "The Tipsy Traveler Tavern": {
+                "description": "The tavern is warm and inviting, with a crackling fire in the hearth. Patrons sit at wooden tables, enjoying food and drink. The bartender wipes down the counter while keeping an eye on the room.",
+                "connections": ["Starting Town"],
+                "npcs": ["Branwen"]
             },
             "Forest Clearing": {
                 "description": "A serene clearing in the middle of a dense forest. The air is fresh and filled with the sounds of wildlife.",
@@ -926,22 +941,50 @@ class RPGGame:
 
     def _initialize_npcs(self):
         """Initialize NPCs in the game world."""
-        # Create some sample NPCs
-        npc1 = NPC("Eldrin", "Shopkeeper", "Starting Town", "merchants")
-        npc1.is_merchant = True
-        npc1.merchant_inventory = [
+        # Starting Town NPCs
+        # Eldrin now runs the Apothecary
+        eldrin = NPC("Eldrin", "Apothecary", "Apothecary's Shop", "merchants")
+        eldrin.is_merchant = True
+        eldrin.merchant_inventory = [
             {"name": "Health Potion", "price": 50, "type": "consumable"},
-            {"name": "Iron Sword", "price": 100, "type": "weapon"},
-            {"name": "Leather Armor", "price": 150, "type": "armor"}
+            {"name": "Mana Potion", "price": 60, "type": "consumable"},
+            {"name": "Antidote", "price": 40, "type": "consumable"},
+            {"name": "Herbal Remedy", "price": 30, "type": "consumable"},
+            {"name": "Smelling Salts", "price": 25, "type": "consumable"}
         ]
         
-        npc2 = NPC("Gorak", "Guard Captain", "Starting Town", "town_guard")
-        npc3 = NPC("Lily", "Herbalist", "Forest Clearing", "druids")
+        # Blacksmith NPC
+        thorik = NPC("Thorik", "Blacksmith", "Blacksmith's Forge", "craftsmen")
+        thorik.is_merchant = True
+        thorik.merchant_inventory = [
+            {"name": "Iron Sword", "price": 100, "type": "weapon"},
+            {"name": "Steel Dagger", "price": 75, "type": "weapon"},
+            {"name": "Chainmail Armor", "price": 200, "type": "armor"},
+            {"name": "Iron Helmet", "price": 80, "type": "armor"},
+            {"name": "Repair Kit", "price": 50, "type": "tool"}
+        ]
+        
+        # Tavern Keeper
+        branwen = NPC("Branwen", "Bartender", "The Tipsy Traveler Tavern", "tavern_keepers")
+        branwen.is_merchant = True
+        branwen.merchant_inventory = [
+            {"name": "Ale", "price": 5, "type": "food", "effects": ["restore 5 hp"]},
+            {"name": "Hearty Stew", "price": 10, "type": "food", "effects": ["restore 15 hp"]},
+            {"name": "Room for the Night", "price": 20, "type": "service", "effects": ["fully restore hp"]},
+            {"name": "Local Rumor", "price": 5, "type": "information"}
+        ]
+        
+        gorak = NPC("Gorak", "Guard Captain", "Starting Town", "town_guard")
+        marla = NPC("Marla", "Baker", "Starting Town", "townsfolk")
+        lily = NPC("Lily", "Herbalist", "Forest Clearing", "druids")
         
         # Add NPCs to memory
-        self.npc_memory.add_npc(npc1)
-        self.npc_memory.add_npc(npc2)
-        self.npc_memory.add_npc(npc3)
+        self.npc_memory.add_npc(eldrin)
+        self.npc_memory.add_npc(gorak)
+        self.npc_memory.add_npc(marla)
+        self.npc_memory.add_npc(thorik)
+        self.npc_memory.add_npc(branwen)
+        self.npc_memory.add_npc(lily)
         
         # Set up some initial faction relationships
         self.npc_memory.update_faction_relationship("town_guard", "merchants", 50)  # Guards like merchants
@@ -1256,6 +1299,19 @@ class RPGGame:
             # Use the properly cased version from connections
             destination = normalized_connections[destination.lower()]
             
+            # Check if the destination is a special location that should trigger talking to an NPC
+            npc_to_talk = None
+            if destination == "Apothecary's Shop":
+                npc_to_talk = "Eldrin"
+            elif destination == "Blacksmith's Forge":
+                npc_to_talk = "Thorik"
+            elif destination == "The Tipsy Traveler Tavern":
+                npc_to_talk = "Branwen"
+            
+            # If it's a special location with an NPC, handle the talk command
+            if npc_to_talk:
+                return self._handle_talk([npc_to_talk])
+            
             # Move to the new location
             result = self.move_player(destination)
             
@@ -1379,111 +1435,160 @@ class RPGGame:
             
         if not npc_name:
             return "You need to specify who you want to talk to."
-
+            
         # Get current location details
+        location = self.current_player.current_location
         location_details = self.get_current_location()
         if not location_details:
             return "You can't see anyone around to talk to."
-
-        # Find NPC in current location
+            
+        # Find NPC in current location with fuzzy matching
         npc = None
         npc_name_found = None
         
         # First try exact match in NPC memory
         npc = self.npc_memory.get_npc(npc_name)
-        
-        # If not found, try case-insensitive match with location NPCs
-        if not npc:
-            for npc_in_loc in location_details.get("npcs", []):
-                if npc_name.lower() in npc_in_loc.lower():
-                    npc_name_found = npc_in_loc
-                    npc = self.npc_memory.get_npc(npc_in_loc)
-                    if not npc:
-                        # Create new NPC if not in memory
-                        npc = NPC(
-                            name=npc_in_loc,
-                            role="villager",  # Default role, can be customized
-                            location=self.current_player.current_location
-                        )
-                        self.npc_memory.add_npc(npc)
-                    break
+        if npc:
+            npc_name_found = npc_name
         else:
-            npc_name_found = npc.name
+            # If not found, try to find the closest matching NPC name in the current location
+            location_npcs = location_details.get("npcs", [])
+            
+            # First try simple case-insensitive partial match
+            for candidate in location_npcs:
+                if npc_name.lower() in candidate.lower():
+                    npc_name_found = candidate
+                    npc = self.npc_memory.get_npc(candidate)
+                    break
+                    
+            # If still no match, try more flexible matching
+            if not npc and len(npc_name) > 2:  # Only try fuzzy matching for names longer than 2 chars
+                for candidate in location_npcs:
+                    # Check for transpositions, missing/extra characters (common typos)
+                    if (abs(len(npc_name) - len(candidate)) <= 2 and
+                        sum(1 for a, b in zip(npc_name.lower(), candidate.lower()) if a == b) >= max(len(npc_name), len(candidate)) - 1):
+                        npc_name_found = candidate
+                        npc = self.npc_memory.get_npc(candidate)
+                        break
+        
+        # If we still don't have an NPC, try to find any NPC in the location
+        if not npc and location_npcs:
+            for candidate in location_npcs:
+                npc_candidate = self.npc_memory.get_npc(candidate)
+                if npc_candidate:
+                    npc_name_found = candidate
+                    npc = npc_candidate
+                    break
+                    
+        # If we still don't have an NPC, create a new one if we have a name
+        if not npc and npc_name_found:
+            npc = NPC(
+                name=npc_name_found,
+                role="villager",
+                location=location
+            )
+            self.npc_memory.add_npc(npc)
+            
+        if not npc:
+            return f"You don't see anyone named '{npc_name}' here. Try 'look' to see who's around."
+            
+        # At this point, we should have a valid NPC
 
-        if npc and npc_name_found:
-            # Update NPC's last seen time and location
-            npc.last_seen = datetime.now()
-            npc.location = self.current_player.current_location
-            
-            # Ensure player has a relationship with this NPC
-            player_id = f"player_{self.current_player.name.lower().replace(' ', '_')}"
-            relationship = npc.get_relationship(player_id)
-            
-            # First meeting handling
-            if relationship.interaction_count == 0:
-                self.session_memory['npcs_met'].add(npc_name_found)
-                self.add_important_event(
-                    event_type="social",
-                    description=f"Met {npc_name_found} for the first time",
-                    location=self.current_player.current_location,
-                    importance=6
-                )
-            
-            # Generate NPC dialogue with relationship context
-            disposition = npc.get_disposition(player_id)
-            dialogue = self.groq_engine.generate_npc_dialogue(
-                npc_name_found,
-                self.current_player.name,
-                self.current_player.current_location,
-                relationship_status=disposition
+        # Update NPC's last seen time and location
+        npc.last_seen = datetime.now()
+        npc.location = location
+        
+        # Ensure player has a relationship with this NPC
+        player_id = f"player_{self.current_player.name.lower().replace(' ', '_')}"
+        relationship = npc.get_relationship(player_id)
+        
+        # First meeting handling
+        if relationship.interaction_count == 0:
+            if 'npcs_met' not in self.session_memory:
+                self.session_memory['npcs_met'] = set()
+            self.session_memory['npcs_met'].add(npc_name_found)
+            self.add_important_event(
+                event_type="social",
+                description=f"Met {npc_name_found} for the first time",
+                location=location,
+                importance=6
             )
+        
+        # Generate NPC dialogue with relationship context
+        disposition = npc.get_disposition(player_id)
+        
+        # Create a more detailed role description that includes relationship status
+        npc_role = getattr(npc, 'role', 'person')
+        detailed_role = f"{npc_role} who is {disposition} towards {self.current_player.name}"
+        
+        dialogue = self.groq_engine.generate_npc_dialogue(
+            npc_name_found,
+            self.current_player.name,
+            location,
+            npc_role=detailed_role,
+            player_class=getattr(self.current_player, 'character_class', 'adventurer')
+        )
+        
+        # Check for and create any NPCs mentioned in the dialogue
+        created_npcs = self._extract_and_create_npcs(dialogue, location)
+        if created_npcs:
+            logger.info(f"Created new NPCs from dialogue: {', '.join(created_npcs)}")
+            # Update the location description to include the new NPCs
+            if location in self.locations and "npcs" in self.locations[location]:
+                npc_list = self.locations[location]["npcs"]
+                if npc_list:
+                    npc_descriptions = [f"{npc} the {self.npc_memory.get_npc(npc).role if self.npc_memory.get_npc(npc) else 'villager'}" 
+                                       for npc in npc_list if self.npc_memory.get_npc(npc)]
+                    if npc_descriptions:
+                        self.locations[location]["description"] = (
+                            f"You are in {location}. You see {', '.join(npc_descriptions)} here."
+                        )
+        
+        # Update relationship based on interaction
+        # Positive affinity for general conversation
+        if relationship.interaction_count < 5:  # Diminishing returns
+            relationship.update_affinity(5 - relationship.interaction_count)
+        
+        relationship.interaction_count += 1
+        relationship.last_interaction = datetime.now()
+        
+        # Add to conversation history
+        self.update_session_memory(
+            f"talked to {npc_name_found}",
+            f"{npc_name_found}: {dialogue}"
+        )
+        
+        return f"{npc_name_found}: {dialogue}"
+
+    def process_input(self, user_input: str, context: Dict[str, Any] = None) -> str:
+        """
+        Process user input and dispatch it to the appropriate command handler.
+        
+        Args:
+            user_input: The raw input string from the user
+            context: Optional context dictionary for additional information
             
-            # Check for and create any NPCs mentioned in the dialogue
-            created_npcs = self._extract_and_create_npcs(dialogue, self.current_player.current_location)
-            if created_npcs:
-                logger.info(f"Created new NPCs from dialogue: {', '.join(created_npcs)}")
-                # Update the location description to include the new NPCs
-                location = self.current_player.current_location
-                if location in self.locations and "npcs" in self.locations[location]:
-                    npc_list = self.locations[location]["npcs"]
-                    if npc_list:
-                        npc_descriptions = [f"{npc} the {self.npc_memory.get_npc(npc).role if self.npc_memory.get_npc(npc) else 'villager'}" 
-                                           for npc in npc_list if self.npc_memory.get_npc(npc)]
-                        if npc_descriptions:
-                            self.locations[location]["description"] = (
-                                f"You are in {location}. You see {', '.join(npc_descriptions)} here."
-                            )
+        Returns:
+            str: The response to display to the user
+        """
+        if not user_input.strip():
+            return "Please enter a command. Type 'help' for a list of commands."
             
-            # Check for and create any NPCs mentioned in the dialogue
-            created_npcs = self._extract_and_create_npcs(dialogue, self.current_player.current_location)
-            if created_npcs:
-                logger.info(f"Created new NPCs from dialogue: {', '.join(created_npcs)}")
-                # Update the location description to include the new NPCs
-                location = self.current_player.current_location
-                if location in self.locations and "npcs" in self.locations[location]:
-                    npc_list = self.locations[location]["npcs"]
-                    if npc_list:
-                        npc_descriptions = [f"{npc} the {self.npc_memory.get_npc(npc).role if self.npc_memory.get_npc(npc) else 'villager'}" 
-                                           for npc in npc_list if self.npc_memory.get_npc(npc)]
-                        if npc_descriptions:
-                            self.locations[location]["description"] = (
-                                f"You are in {location}. You see {', '.join(npc_descriptions)} here."
-                            )
-            
-            # Update relationship based on interaction
-            # Positive affinity for general conversation
-            if relationship.interaction_count < 5:  # Diminishing returns
-                relationship.update_affinity(5 - relationship.interaction_count)
-            
-            # Record the conversation in session memory
-            self.update_session_memory(
-                f"talked to {npc_name_found} ({disposition})",
-                f"{npc_name_found} said: {dialogue}"
-            )
-            
-            return f"\n{npc_name_found} ({disposition}) says: {dialogue}"
-            
-        return f"You don't see {npc_name} here."
+        # Split the input into command and arguments
+        parts = user_input.strip().split()
+        command = parts[0].lower()
+        args = parts[1:] if len(parts) > 1 else []
+        
+        # Check if the command exists in the command handlers
+        if command in self.command_handlers:
+            try:
+                # Call the appropriate handler with the arguments
+                return self.command_handlers[command](args)
+            except Exception as e:
+                logger.error(f"Error executing command '{command}': {str(e)}")
+                return f"An error occurred while processing your command: {str(e)}"
+        else:
+            return f"Unknown command: {command}. Type 'help' for a list of available commands."
 
     def _handle_npc_info(self, args: List[str]) -> str:
         """
