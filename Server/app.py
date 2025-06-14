@@ -92,25 +92,24 @@ def generate_stream_response(command, game):
         ]
 
         # Check if command starts with any movement prefix
-        is_movement = False
-        for prefix in movement_prefixes:
-            if command.lower().startswith(prefix.lower()):
-                is_movement = True
-                break
+        is_movement = any(command.lower().startswith(prefix.lower()) for prefix in movement_prefixes)
 
-        # If it's a movement command, process it directly with process_input
-        # to let the game's _handle_go method handle the parsing
+        # Process the command once
+        response = game.process_input(command, context)
+        
+        # If it's a movement command, send the response and return
         if is_movement:
-            response = game.process_input(command, context)
-            yield f"data: {json.dumps({'type': 'response', 'content': response})}\n\n"
+            if response:
+                yield f"data: {json.dumps({'type': 'response', 'content': response})}\n\n"
             return
 
-        # Process command and yield response
-        response = game.process_input(command, context)
-        yield f"data: {json.dumps({'type': 'response', 'content': response})}\n\n"
-        
         # Special handling for combat
-        if command == "attack" and game.combat_mode:
+        if command.lower() == "attack" and game.combat_mode and game.current_player:
+            # Send initial response if any
+            if response:
+                yield f"data: {json.dumps({'type': 'response', 'content': response})}\n\n"
+                
+            # Generate combat description
             player_tuple = (
                 game.current_player.name,
                 game.current_player.character_class,
@@ -131,13 +130,11 @@ def generate_stream_response(command, game):
             # Stream combat result
             combat_result = game.handle_attack()
             yield f"data: {json.dumps({'type': 'combat_result', 'content': combat_result})}\n\n"
-        # Handle all other commands
-        else:
-            response = game.process_input(command, context)
-            if response:
-                yield f"data: {json.dumps({'type': 'response', 'content': response})}\n\n"
+        # For all other commands, just send the response if it exists
+        elif response:
+            yield f"data: {json.dumps({'type': 'response', 'content': response})}\n\n"
 
-        # Send final game state update
+        # Send final game state update if we have a player
         if game.current_player:
             game_state = {
                 'type': 'game_state',

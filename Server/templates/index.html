@@ -1306,7 +1306,10 @@
                 if (buffer.trim()) {
                     try {
                         const message = JSON.parse(buffer);
-                        addConsoleMessage(CONSOLE_TYPES.RESPONSE, message.content || 'Command executed');
+                        // Only add the message if it's not the end marker
+                        if (message.type !== 'end') {
+                            addConsoleMessage(CONSOLE_TYPES.RESPONSE, message.content || 'Command executed');
+                        }
                     } catch (e) {
                         console.error('Failed to parse final buffer:', e);
                     }
