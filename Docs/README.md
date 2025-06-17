@@ -1,6 +1,6 @@
 # Dungeon Master RPG
 
-A text-based RPG game with Groq AI integration, built with Python and Flask. Experience a dynamic adventure with rich character progression and interactive gameplay.
+A text-based RPG game with Groq AI integration, built with Python and Flask. Experience a dynamic adventure with rich character progression, interactive gameplay, and immersive world exploration.
 
 ## Features
 
@@ -15,6 +15,8 @@ A text-based RPG game with Groq AI integration, built with Python and Flask. Exp
   - Real-time combat system with turn-based mechanics
   - Interactive NPCs with AI-powered dialogue
   - Location-based exploration with unique encounters
+  - Dynamic "look around" functionality with contextual descriptions
+  - Time-of-day based environment changes
   - Enemy encounters with varying difficulty levels
 
 - **Inventory & Items**
@@ -24,30 +26,42 @@ A text-based RPG game with Groq AI integration, built with Python and Flask. Exp
   - Equipment comparison and quick-equip functionality
 
 - **User Interface**
-  - Responsive design that works on desktop and tablet
-  - Interactive panels for character status and inventory
-  - Visual progress indicators for health, mana, and experience
-  - Tooltips and help text for game mechanics
+  - **Responsive Design** - Works on desktop and tablet devices
+  - **Interactive Console** - Rich text output with proper formatting and colors
+  - **Status Panels** - Real-time updates for character stats and inventory
+  - **Visual Feedback** - Animated messages and loading indicators
+  - **Error Handling** - Clear error messages and recovery options
+  - **Keyboard Shortcuts** - Quick access to common commands
+  - **Accessibility** - High contrast mode and text scaling options
 
-## Setup
+## 🚀 Setup
 
-1. Install dependencies:
-```bash
-pip install -r requirements.txt
-```
+1. **Install Dependencies**
+   ```bash
+   pip install -r requirements.txt
+   ```
 
-2. Create a `.env` file with your Groq API key:
-```
-GROQ_API_KEY=your_groq_api_key_here
-GROQ_MODEL=mixtral-8x7b-instruct
-```
+2. **Configure Environment**
+   Create a `.env` file with your API keys:
+   ```
+   GROQ_API_KEY=your_groq_api_key_here
+   GROQ_MODEL=mixtral-8x7b-instruct
+   ```
 
-3. Start the server:
-```bash
-./start.bat
-```
+3. **Launch the Game**
+   ```bash
+   # Windows
+   ./start.bat
+   
+   # Linux/MacOS
+   python -m Server.app
+   ```
 
-The game will be available at http://localhost:30000
+4. **Access the Game**
+   Open your browser and navigate to:
+   ```
+   http://localhost:30000
+   ```
 
 ## Game Controls
 
@@ -64,9 +78,11 @@ The game will be available at http://localhost:30000
 - Monitor your health and mana during combat
 
 ### Exploration
-- Explore different locations in the world
-- Discover hidden items and secrets
-- Interact with the environment
+- **Look Around** - Get detailed descriptions of your current location
+- **Dynamic Environment** - Experience changing descriptions based on time of day
+- **Interactive Elements** - Discover and interact with objects in the environment
+- **NPC Awareness** - See what NPCs are nearby and what they're doing
+- **Hidden Secrets** - Find hidden items and locations through careful observation
 
 ### NPC Interaction
 - Talk to NPCs for quests and information
@@ -79,7 +95,22 @@ The game will be available at http://localhost:30000
 - Check item details by hovering over them
 - Compare equipment stats before equipping
 
-## Game Mechanics
+## 🌟 Recent Updates
+
+### v1.2.0 - Enhanced Exploration
+- Completely revamped "look around" system
+- Dynamic environment descriptions based on time and location
+- Improved NPC presence and activities in locations
+- Better error handling and recovery
+- Smoother UI with loading states and animations
+
+### v1.1.0 - UI Improvements
+- Redesigned console output with better formatting
+- Visual feedback for actions and errors
+- Improved mobile responsiveness
+- Streamlined inventory management
+
+## 🎮 Game Mechanics
 
 ### Character Progression
 - Gain experience points (XP) through combat and quests
