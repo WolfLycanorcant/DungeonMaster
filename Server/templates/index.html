@@ -126,6 +126,36 @@
             cursor: pointer;
         }
 
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none !important;
+            box-shadow: none !important;
+        }
+        
+        .loading {
+            color: #bbb;
+            font-style: italic;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .loading::after {
+            content: '';
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
         #console-container {
             flex: 1;
             border: 1px solid #ccc;
@@ -135,17 +165,36 @@
             background-color: #f5f5f5;
         }
 
-        #console-output {
+        .console-output {
             height: 300px;
             overflow-y: auto;
             background: #1a1a1a;
-            color: #00ff00;
+            color: #e0e0e0;
             font-family: 'Courier New', Courier, monospace;
             padding: 15px;
             border: 1px solid #333;
             border-radius: 6px;
             margin-bottom: 15px;
-            line-height: 1.5;
+            line-height: 1.6;
+            scroll-behavior: smooth;
+        }
+        
+        .console-output::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        .console-output::-webkit-scrollbar-track {
+            background: #2a2a2a;
+            border-radius: 4px;
+        }
+        
+        .console-output::-webkit-scrollbar-thumb {
+            background: #444;
+            border-radius: 4px;
+        }
+        
+        .console-output::-webkit-scrollbar-thumb:hover {
+            background: #555;
         }
 
         .console-entry {
@@ -169,28 +218,50 @@
         
         .console-response {
             color: #2ecc71;
-            margin: 8px 0;
-            padding: 8px 12px;
-            background-color: rgba(46, 204, 113, 0.1);
+            margin: 12px 0;
+            padding: 12px 15px;
+            background-color: rgba(46, 204, 113, 0.08);
             border-left: 3px solid #2ecc71;
             border-radius: 0 4px 4px 0;
             font-family: 'Courier New', monospace;
-            max-height: 400px;
-            overflow-y: auto;
             white-space: pre-wrap;
             word-break: break-word;
+            opacity: 0;
+            animation: fadeIn 0.3s ease-in-out forwards;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .console-response p {
+            margin: 0.5em 0;
+            line-height: 1.6;
+        }
+        
+        .console-response p:first-child {
+            margin-top: 0;
+        }
+        
+        .console-response p:last-child {
+            margin-bottom: 0;
         }
         
         .console-error {
-            color: #e74c3c;
-            margin: 8px 0;
-            padding: 8px 12px;
-            background-color: rgba(231, 76, 60, 0.1);
-            border-left: 3px solid #e74c3c;
+            color: #ff6b6b;
+            margin: 12px 0;
+            padding: 12px 15px;
+            background-color: rgba(255, 76, 76, 0.1);
+            border-left: 3px solid #ff6b6b;
             border-radius: 0 4px 4px 0;
             font-family: 'Courier New', monospace;
             white-space: pre-wrap;
             word-break: break-word;
+            opacity: 0;
+            animation: fadeIn 0.3s ease-in-out forwards;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
         }
         
         .console-info {
@@ -775,7 +846,7 @@
     </div>
     
     <div id="console-container">
-        <div id="console-output"></div>
+                <div class="console-output"></div>
         <div id="console-input-container">
             <input type="text" id="console-input" placeholder="Enter your command..." onkeypress="handleKeyPress(event)" />
             <button onclick="sendConsoleCommand()">Send</button>
@@ -827,7 +898,7 @@
         }
 
         // DOM Elements
-        const consoleOutputElement = document.getElementById('console-output');
+        const consoleOutputElement = document.querySelector('.console-output');
         const characterCreation = document.getElementById('character-creation');
         const gameContent = document.getElementById('game-content');
         const playerNameElement = document.getElementById('player-name');
@@ -1612,9 +1683,34 @@
         }
 
         async function lookAround() {
-            const consoleContainer = document.getElementById("console-output");
-
+            const consoleContainer = document.querySelector(".console-output");
+            const lookButton = document.querySelector("button[onclick='lookAround()']");
+            const originalButtonText = lookButton ? lookButton.textContent : 'Look Around';
+            
             try {
+                // Show loading state
+                if (lookButton) {
+                    lookButton.disabled = true;
+                    lookButton.textContent = 'Looking around...';
+                }
+                
+                if (!consoleContainer) {
+                    throw new Error('Console output element not found');
+                }
+                
+                // Clear any previous error messages
+                const previousErrors = consoleContainer.querySelectorAll('.console-error');
+                previousErrors.forEach(el => el.remove());
+                
+                // Create a new response container for this look action
+                const responseDiv = document.createElement("div");
+                responseDiv.classList.add("console-response");
+                responseDiv.innerHTML = '<span class="loading">Looking around...</span>';
+                consoleContainer.appendChild(responseDiv);
+                
+                // Scroll to bottom to show the loading message
+                consoleContainer.scrollTop = consoleContainer.scrollHeight;
+                
                 const response = await fetch("/api/look_around", {
                     method: "POST",
                     headers: {
@@ -1623,25 +1719,49 @@
                 });
 
                 const data = await response.json();
+                
                 if (response.ok) {
-                    const description = data.description;
-
-                    // Find existing .console-response or create one if it doesn't exist
-                    let responseDiv = consoleContainer.querySelector(".console-response");
-                    if (!responseDiv) {
-                        responseDiv = document.createElement("div");
-                        responseDiv.classList.add("console-response");
-                        consoleContainer.appendChild(responseDiv);
-                    }
-
-                    // Append new description text
-                    responseDiv.textContent += `\n${description}`;
-
+                    // Update the loading message with the actual description
+                    responseDiv.innerHTML = '';
+                    // Preserve line breaks in the description
+                    const descriptionParagraphs = data.description.split('\n').filter(p => p.trim() !== '');
+                    descriptionParagraphs.forEach((para, index) => {
+                        const p = document.createElement('p');
+                        p.textContent = para;
+                        responseDiv.appendChild(p);
+                    });
                 } else {
-                    console.error(data.error);
+                    // Show error message in red
+                    const errorDiv = document.createElement("div");
+                    errorDiv.classList.add("console-error");
+                    errorDiv.textContent = `Error: ${data.error || 'Failed to look around'}`;
+                    consoleContainer.insertBefore(errorDiv, responseDiv.nextSibling);
+                    console.error('Look around error:', data.error);
+                    responseDiv.remove(); // Remove the loading message
                 }
+                
             } catch (error) {
-                console.error("Error:", error);
+                console.error("Look around error:", error);
+                const errorDiv = document.createElement("div");
+                errorDiv.classList.add("console-error");
+                errorDiv.textContent = `Error: ${error.message || 'Failed to look around. Please try again.'}`;
+                if (consoleContainer) {
+                    consoleContainer.appendChild(errorDiv);
+                    consoleContainer.scrollTop = consoleContainer.scrollHeight;
+                } else {
+                    console.error('Could not display error - console container not found');
+                }
+            } finally {
+                // Restore button state
+                if (lookButton) {
+                    lookButton.disabled = false;
+                    lookButton.textContent = originalButtonText;
+                }
+                
+                // Scroll to bottom to show new content
+                if (consoleContainer) {
+                    consoleContainer.scrollTop = consoleContainer.scrollHeight;
+                }
             }
         }
 

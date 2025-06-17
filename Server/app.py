@@ -225,19 +225,34 @@ def console_command():
 def look_around():
     try:
         if not game.current_player:
-            return jsonify({"error": "No player created"}), 400
+            app.logger.warning("Look around attempted with no player")
+            return jsonify({"error": "No player created. Please create a character first."}), 400
 
         location_data = game.get_current_location()
         if not location_data:
-            return jsonify({"error": "Could not retrieve current location details"}), 400
+            app.logger.warning("No location data for player %s", game.current_player.name)
+            # Try to force a location update
+            if hasattr(game, '_handle_look'):
+                description = game._handle_look([])
+                if description:
+                    return jsonify({"description": description})
+            return jsonify({"error": "Could not determine your current location. Try moving to a new area."}), 400
 
-        description = location_data.get("dynamic_description", "No description available for this location.")
+        # If dynamic description is empty or missing, force regenerate it
+        description = location_data.get("dynamic_description", "").strip()
+        if not description and hasattr(game, '_handle_look'):
+            description = game._handle_look([])
+            if description:
+                return jsonify({"description": description})
+
+        if not description:
+            description = "You take a moment to observe your surroundings, but nothing stands out to you."
 
         return jsonify({"description": description})
 
     except Exception as e:
         app.logger.error("Error in /api/look_around: %s", str(e), exc_info=True)
-        return jsonify({"error": str(e)}), 500
+        return jsonify({"error": f"Failed to look around: {str(e)}"}), 500
 
 @app.route('/api/check_inventory', methods=['GET'])
 def check_inventory():
