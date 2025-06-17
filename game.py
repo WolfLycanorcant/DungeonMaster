@@ -55,6 +55,8 @@ class NPC:
         self.is_merchant: bool = False
         self.merchant_inventory: List[Dict] = []
         self.temporary: bool = False  # Whether this is a temporary NPC
+        self.dialogue_history = deque(maxlen=5)  # Track last 5 lines of dialogue
+        self.consecutive_questions = 0  # Track consecutive questions asked
         
     def update_relationship(self, entity_id: str, affinity_change: int = 0, fact: Optional[str] = None) -> NPCRelationship:
         """Update relationship with another entity."""
@@ -103,6 +105,32 @@ class NPC:
         if entity_id not in self.relationships:
             return False
         return self.relationships[entity_id].has_fact(fact)
+        
+    def has_asked_too_many_questions(self) -> bool:
+        """
+        Check if the NPC has asked too many questions in a row.
+        
+        Returns:
+            bool: True if the NPC has asked 3 or more questions in their last few lines
+        """
+        # Check the last 3-5 lines of dialogue for questions
+        question_count = sum(1 for line in self.dialogue_history if line.strip().endswith('?'))
+        return question_count >= 3
+        
+    def add_dialogue(self, dialogue: str) -> None:
+        """
+        Add a line of dialogue to the NPC's history and update question tracking.
+        
+        Args:
+            dialogue: The dialogue line to add
+        """
+        self.dialogue_history.append(dialogue)
+        
+        # Update consecutive question counter
+        if dialogue.strip().endswith('?'):
+            self.consecutive_questions += 1
+        else:
+            self.consecutive_questions = 0
     
     def to_dict(self) -> Dict:
         """Convert NPC data to a dictionary for serialization."""
@@ -112,12 +140,7 @@ class NPC:
             "location": self.location,
             "faction": self.faction,
             "relationships": {
-                entity_id: {
-                    "affinity": rel.affinity,
-                    "last_interaction": rel.last_interaction.isoformat() if rel.last_interaction else None,
-                    "interaction_count": rel.interaction_count,
-                    "known_facts": list(rel.known_facts)
-                }
+                entity_id: rel.to_dict() 
                 for entity_id, rel in self.relationships.items()
             },
             "inventory": self.inventory,
@@ -126,7 +149,10 @@ class NPC:
             "first_met": self.first_met.isoformat(),
             "last_seen": self.last_seen.isoformat(),
             "is_merchant": self.is_merchant,
-            "merchant_inventory": self.merchant_inventory
+            "merchant_inventory": self.merchant_inventory,
+            "temporary": self.temporary,
+            "dialogue_history": list(self.dialogue_history) if hasattr(self, 'dialogue_history') else [],
+            "consecutive_questions": self.consecutive_questions if hasattr(self, 'consecutive_questions') else 0
         }
     
     @classmethod
@@ -140,25 +166,26 @@ class NPC:
         )
         
         # Restore relationships
-        for entity_id, rel_data in data.get("relationships", {}).items():
-            relationship = NPCRelationship()
-            relationship.affinity = rel_data["affinity"]
-            relationship.interaction_count = rel_data["interaction_count"]
-            relationship.known_facts = set(rel_data.get("known_facts", []))
-            
-            if rel_data["last_interaction"]:
-                relationship.last_interaction = datetime.fromisoformat(rel_data["last_interaction"])
-                
-            npc.relationships[entity_id] = relationship
+        npc.relationships = {
+            entity_id: NPCRelationship.from_dict(rel_data)
+            for entity_id, rel_data in data.get("relationships", {}).items()
+        }
         
         # Restore other attributes
         npc.inventory = data.get("inventory", [])
         npc.schedule = data.get("schedule", {})
-        npc.known_locations = set(data.get("known_locations", []))
+        npc.known_locations = set(data.get("known_locations", [data["location"]]))
         npc.first_met = datetime.fromisoformat(data.get("first_met", datetime.now().isoformat()))
         npc.last_seen = datetime.fromisoformat(data.get("last_seen", datetime.now().isoformat()))
         npc.is_merchant = data.get("is_merchant", False)
         npc.merchant_inventory = data.get("merchant_inventory", [])
+        npc.temporary = data.get("temporary", False)
+        
+        # Restore dialogue tracking
+        if "dialogue_history" in data:
+            npc.dialogue_history = deque(data["dialogue_history"], maxlen=5)
+        if "consecutive_questions" in data:
+            npc.consecutive_questions = data["consecutive_questions"]
         
         return npc
 
@@ -671,22 +698,27 @@ class GroqEngine:
             return f"Combat begins between {player_name} and {enemy_name}!"
 
 class Item:
-    def __init__(self, name: str, item_type: str, stats: Dict[str, Any], stackable: bool = False, max_stack: int = 1):
+    def __init__(self, name: str, item_type: str, stats: Dict[str, Any], stackable: bool = False, max_stack: int = 1, temporary: bool = False):
         self.name = name
         self.item_type = item_type
         self.stats = stats
         self.stackable = stackable
         self.max_stack = max_stack
         self.quantity = 1 if not stackable else None
+        self.temporary = temporary  # Whether this is a temporary item that shouldn't be saved
         
     def to_dict(self) -> Dict[str, Any]:
+        # Don't include temporary items in the save data
+        if self.temporary:
+            return None
         return {
             "name": self.name,
             "type": self.item_type,
             "stats": self.stats,
             "stackable": self.stackable,
             "max_stack": self.max_stack,
-            "quantity": self.quantity
+            "quantity": self.quantity,
+            "temporary": self.temporary
         }
 
     def __str__(self):
@@ -696,7 +728,7 @@ class Item:
 
     def __eq__(self, other):
         if isinstance(other, Item):
-            return (self.name == other.name and 
+            return (self.name.lower() == other.name.lower() and 
                     self.item_type == other.item_type and 
                     self.stats == other.stats)
         return False
@@ -704,7 +736,7 @@ class Item:
     def can_stack_with(self, other: 'Item') -> bool:
         return (self.stackable and 
                 other.stackable and 
-                self.name == other.name and 
+                self.name.lower() == other.name.lower() and 
                 self.item_type == other.item_type and 
                 self.stats == other.stats)
 
@@ -830,18 +862,33 @@ class Character:
         return None
 
     def to_dict(self) -> Dict[str, Any]:
+        # Filter out temporary items when saving
+        inventory_data = []
+        for item in self.inventory:
+            item_data = item.to_dict()
+            if item_data is not None:  # Skip temporary items (they return None from to_dict)
+                inventory_data.append(item_data)
+                
+        equipped_data = {}
+        for slot, item in self.equipped.items():
+            if item is None:
+                equipped_data[slot] = None
+            else:
+                item_data = item.to_dict()
+                if item_data is not None:  # Skip temporary items
+                    equipped_data[slot] = item_data
+                else:
+                    equipped_data[slot] = None  # Unequip temporary items
+        
         return {
             "name": self.name,
             "class": self.character_class,
             "level": self.level,
             "attributes": self.attributes,
             "hit_points": self.hit_points,
-            "inventory": [item.to_dict() for item in self.inventory],
-            "equipped": {
-                "weapon": self.equipped["weapon"].to_dict() if self.equipped["weapon"] else None,
-                "armor": self.equipped["armor"].to_dict() if self.equipped["armor"] else None,
-                "accessories": [item.to_dict() for item in self.equipped["accessories"]]
-            }
+            "inventory": inventory_data,
+            "equipped": equipped_data,
+            "current_location": self.current_location
         }
 
 class LazyRuleLoader:
@@ -920,41 +967,91 @@ class RPGGame:
             # Movement and location
             "look": self._handle_look,
             "l": self._handle_look,
+            "examine": self._handle_look,  # Alias for look
+            "inspect": self._handle_look,  # Alias for look
+            "observe": self._handle_look,  # Alias for look
+            "check": self._handle_look,    # Alias for look
+            "view": self._handle_look,     # Alias for look
+            
+            # Movement
             "go": self._handle_go,
             "move": self._handle_go,
             "travel": self._handle_go,
-            "location": self._handle_location,  # Show current location
-            "where am i": self._handle_location,  # Natural language for location
+            "walk": self._handle_go,      # Alias for go
+            "head": self._handle_go,       # Alias for go (e.g., "head north")
+            "proceed": self._handle_go,    # Alias for go
+            
+            # Location info
+            "location": self._handle_location,
+            "where am i": self._handle_location,
+            "whereami": self._handle_location,  # No-space variant
+            "current location": self._handle_location,
             
             # Inventory and equipment
             "inventory": self._handle_inventory,
+            "i": self._handle_inventory,  # Common MUD-style inventory shortcut
+            "inv": self._handle_inventory,  # Shortcut
+            "items": self._handle_inventory,  # Alias
             "equip": self._handle_equip,
+            "wear": self._handle_equip,  # Alias for equip
+            "wield": self._handle_equip,  # Alias for equip
+            "use": self._handle_equip,    # Alias for equip
             
             # Character status
             "status": self._handle_status,
             "stats": self._handle_status,
+            "character": self._handle_status,  # Alias
+            "health": self._handle_status,    # Alias
+            "hp": self._handle_status,        # Common game shorthand
             
             # NPC interaction
             "talk": self._handle_talk,
+            "speak": self._handle_talk,  # Alias
+            "ask": self._handle_talk,    # Alias
+            "tell": self._handle_talk,   # Alias
+            "say": self._handle_talk,    # Alias
+            "converse": self._handle_talk,  # Alias
+            "chat": self._handle_talk,    # Alias
+            "greet": self._handle_talk,   # Alias
             "npc": self._handle_npc_info,
+            "character": self._handle_npc_info,  # Alias
             "npcs": self._handle_npcs,
+            "people": self._handle_npcs,  # Alias
+            "characters": self._handle_npcs,  # Alias
             
             # Time
             "time": self._handle_time,
-            "what time is it": self._handle_time,  # Natural language time command
+            "what time is it": self._handle_time,
+            "what's the time": self._handle_time,  # Common variant
+            "what time is it now": self._handle_time,  # More verbose
+            "current time": self._handle_time,  # Alternative
+            "day": self._handle_time,     # Simple time check
             
             # Navigation
-            "exits": self._handle_exits,   # Show available exits
-            "locations": self._handle_exits, # Alias for exits
+            "exits": self._handle_exits,
+            "locations": self._handle_exits,
+            "directions": self._handle_exits,  # Alias
+            "where can i go": self._handle_exits,  # Natural language
+            "available exits": self._handle_exits,  # More verbose
+            "show exits": self._handle_exits,  # Alternative
+            "map": self._handle_exits,    # Some players might expect this
             
             # Game management
             "save": self._handle_save,
+            "save game": self._handle_save,  # More explicit
             "load": self._handle_load,
+            "load game": self._handle_load,  # More explicit
             "saves": self._handle_list_saves,
+            "saved games": self._handle_list_saves,  # More explicit
             "help": self._handle_help,
-            "h": self._handle_help,
+            "h": self._handle_help,  # Common help shortcut
+            "?": self._handle_help,   # Common help shortcut
+            "commands": self._handle_help,  # Alternative to help
             "exit": self._handle_exit,
             "quit": self._handle_exit,
+            "q": self._handle_exit,   # Common quit shortcut
+            "bye": self._handle_exit,  # Friendly exit
+            "goodbye": self._handle_exit,  # More formal exit
         }
         self.session_memory = {
             "actions": [],
@@ -1687,6 +1784,83 @@ class RPGGame:
         
         return any(indicator in input_text for indicator in follow_up_indicators)
         
+    def _extract_gifted_item(self, text: str) -> Optional[str]:
+        """
+        Extract the name of an item being given by an NPC.
+        
+        Args:
+            text: The NPC's dialogue text
+            
+        Returns:
+            str: The name of the item being given, or None if no item is being given
+        """
+        # Pattern 1: "Here, take this [item]" or "Take this [item]"
+        match = re.search(r'(?:here, )?take (?:this|the|my)? ?([a-zA-Z0-9\s]+?)(?:[\.!?,]|$)', text, re.IGNORECASE)
+        if match:
+            return match.group(1).strip()
+            
+        # Pattern 2: "I made/found/forged/brought you a [item]"
+        match = re.search(r'(?:I|i)\s+(?:made|forged|brought|found|crafted|have for you)\s+(?:you )?(?:a |an |some |the )?([a-zA-Z0-9\s]+?)(?:[\.!?,]|$)', text, re.IGNORECASE)
+        if match:
+            return match.group(1).strip()
+            
+        # Pattern 3: "You can have this [item]" or "You may take this [item]"
+        match = re.search(r'you (?:can|may) (?:have|take) (?:this |the |my )?([a-zA-Z0-9\s]+?)(?:[\.!?,]|$)', text, re.IGNORECASE)
+        if match:
+            return match.group(1).strip()
+            
+        return None
+        
+    def _generate_item_from_name(self, name: str) -> Optional[Item]:
+        """
+        Generate an Item object based on the item name.
+        
+        Args:
+            name: The name of the item to generate
+            
+        Returns:
+            Item: The generated item, or None if no matching item type is found
+        """
+        name_lower = name.lower()
+        
+        # Potions and consumables
+        if any(x in name_lower for x in ['potion', 'elixir', 'tonic', 'flask', 'vial']):
+            heal_amount = random.randint(5, 20)
+            return Item(
+                name=name.title(),
+                item_type='consumable',
+                stats={"heal": heal_amount},
+                temporary=True
+            )
+            
+        # Weapons
+        elif any(x in name_lower for x in ['sword', 'dagger', 'axe', 'mace', 'hammer', 'spear', 'bow', 'crossbow']):
+            damage = random.randint(3, 10)
+            return Item(
+                name=name.title(),
+                item_type='weapon',
+                stats={"damage": damage},
+                temporary=True
+            )
+            
+        # Armor
+        elif any(x in name_lower for x in ['armor', 'mail', 'plate', 'leather', 'robe', 'tunic', 'cloak']):
+            defense = random.randint(1, 5)
+            return Item(
+                name=name.title(),
+                item_type='armor',
+                stats={"defense": defense},
+                temporary=True
+            )
+            
+        # Default to a generic misc item
+        return Item(
+            name=name.title(),
+            item_type='misc',
+            stats={},
+            temporary=True
+        )
+        
     def _handle_npc_follow_up(self, input_text: str) -> str:
         """
         Handle follow-up interactions with the current NPC.
@@ -1810,18 +1984,39 @@ class RPGGame:
         
         # Generate NPC dialogue with relationship context
         disposition = npc.get_disposition(player_id)
-        
-        # Create a more detailed role description that includes relationship status
         npc_role = getattr(npc, 'role', 'person')
-        detailed_role = f"{npc_role} who is {disposition} towards {self.current_player.name}"
         
-        dialogue = self.groq_engine.generate_npc_dialogue(
-            npc_name_found,
-            self.current_player.name,
-            location,
-            npc_role=detailed_role,
-            player_class=getattr(self.current_player, 'character_class', 'adventurer')
-        )
+        # Check if NPC has asked too many questions
+        if hasattr(npc, 'has_asked_too_many_questions') and npc.has_asked_too_many_questions():
+            # Clear the dialogue history to reset the question counter
+            if hasattr(npc, 'dialogue_history'):
+                npc.dialogue_history.clear()
+            if hasattr(npc, 'consecutive_questions'):
+                npc.consecutive_questions = 0
+            
+            # Generate a response that doesn't ask a question
+            detailed_role = f"{npc_role} who is {disposition} towards {self.current_player.name} and is trying to avoid asking more questions"
+            extra_instruction = " (IMPORTANT: Do not ask any questions in your response. Provide a statement or observation instead.)"
+            
+            dialogue = self.groq_engine.generate_npc_dialogue(
+                npc_name_found,
+                self.current_player.name,
+                location,
+                npc_role=detailed_role + extra_instruction,
+                player_class=getattr(self.current_player, 'character_class', 'adventurer')
+            )
+            
+            # Ensure the response doesn't end with a question mark
+            if dialogue.strip().endswith('?'):
+                dialogue = dialogue.rstrip('?') + '.'
+            
+            # Filter out aggressive responses if the player is just investigating
+            if any(word in user_input.lower() for word in ['what', 'how', 'when', 'where', 'why', 'who', 'which', 'describe', 'tell me about', 'look like']):
+                dialogue = self._filter_aggressive_response(dialogue)
+        
+        # Add the dialogue to the NPC's history
+        if hasattr(npc, 'add_dialogue'):
+            npc.add_dialogue(dialogue)
         
         # Check for and create any NPCs mentioned in the dialogue
         created_npcs = self._extract_and_create_npcs(dialogue, location)
@@ -1846,6 +2041,21 @@ class RPGGame:
         relationship.interaction_count += 1
         relationship.last_interaction = datetime.now()
         
+        # Check if the NPC is giving the player an item
+        item_given = None
+        item_name = self._extract_gifted_item(dialogue)
+        if item_name and self.current_player:
+            item_given = self._generate_item_from_name(item_name)
+            if item_given:
+                # Add the item to the player's inventory
+                self.current_player.add_item(item_given)
+                # Add a system message about the item
+                system_msg = f"\n[System: {npc_name_found} gave you {item_name}. It has been added to your inventory.]"
+                dialogue += system_msg
+                
+                # Log the item transfer
+                logger.info(f"{npc_name_found} gave {self.current_player.name} {item_name}")
+        
         # Add to conversation history
         self.update_session_memory(
             f"talked to {npc_name_found}",
@@ -1853,6 +2063,283 @@ class RPGGame:
         )
         
         return f"{npc_name_found}: {dialogue}"
+
+    # Precompiled regex patterns for aggressive responses
+    _AGGRESSIVE_PATTERNS = [
+        # Physical attacks
+        re.compile(r"""
+            (?:attacks?|strikes?|hits?|slashes?|stabs?|punches?|kicks?|smashes?|bashes?|slams?|
+            lunges?\s+at|charges\s+at|swings\s+at|throws|shoots|fires\s+at|casts|strikes\s+out\s+at|lashes\s+out\s+at|
+            brings\s+down|brings\s+.*?\s+down\s+on|lets?\s+.*?\s+fly\s+at|hurls\s+.*?\s+at|flings\s+.*?\s+at|
+            launches\s+.*?\s+at|sends\s+.*?\s+flying\s+at|propels\s+.*?\s+toward|directs\s+.*?\s+toward|
+            unleashes\s+.*?\s+on|releases\s+.*?\s+toward|discharges\s+.*?\s+at|projects\s+.*?\s+at)
+            \s+(?:at\s+)?(?:you|the\s+player)
+        """, re.VERBOSE | re.IGNORECASE),
+        
+        # Aggressive actions and posturing
+        re.compile(r"""
+            (?:growls?|snarls?|snaps|bares\s+.*?\s+teeth|clenches\s+.*?\s+fists?|balls?\s+.*?\s+fists?|
+            raises\s+.*?\s+(?:weapon|fist|hand)|brandishes|draws\s+.*?\s+(?:weapon|sword|knife|dagger)|
+            runs?\s+toward|rushes\s+toward|moves\s+in\s+(?:for|to\s+attack)|prepares\s+to\s+attack|
+            gets?\s+(?:ready|prepared)\s+(?:for|to)\s+(?:attack|fight)|takes?\s+(?:a|the)\s+(?:swing|swipe|stab|shot)\s+at|
+            goes?\s+(?:for|after)|makes?\s+(?:a|the)\s+(?:move|grab)\s+(?:for|at)|starts?\s+(?:to\s+)?(?:attack|fight)|
+            begins?\s+(?:to\s+)?(?:attack|fight)|launches?\s+(?:an\s+)?attack|initiates?\s+(?:an\s+)?attack|
+            strikes?\s+(?:out\s+)?first|makes?\s+(?:the\s+)?first\s+(?:move|strike)|escalates?\s+(?:the\s+)?situation|
+            turns?\s+(?:on|against)\s+(?:you|the\s+player)|takes?\s+(?:a|the)\s+(?:hostile|aggressive)\s+(?:stance|position))
+        """, re.VERBOSE | re.IGNORECASE),
+        
+        # Threatening language and intent
+        re.compile(r"""
+            (?:i\s+(?:will|'ll|am\s+going\s+to|am\s+about\s+to)|gonna)\s+
+            (?:kill|attack|hurt|harm|destroy|eliminate|end|finish|take\s+(?:you|care\s+of\s+you)|
+            deal\s+with\s+you|teach\s+you\s+a\s+lesson|make\s+you\s+(?:regret|pay|suffer)|
+            show\s+you|punish\s+you|get\s+(?:you|rid\s+of\s+you)|put\s+(?:you|an\s+end\s+to\s+this)|
+            settle\s+this|wipe\s+(?:that|the)\s+(?:smile|grin)\s+(?:off|from)\s+your\s+face|
+            make\s+an\s+example\s+(?:of|out\s+of)\s+you|see\s+you\s+(?:dead|in\s+hell)|
+            tear\s+(?:you|your)\s+(?:apart|limb\s+from\s+limb)|break\s+(?:you|your)\s+(?:spirit|will)|
+            make\s+you\s+(?:beg|plead)\s+(?:for|to)\s+(?:mercy|your\s+life))
+        """, re.VERBOSE | re.IGNORECASE),
+        
+        # Combat preparation and engagement
+        re.compile(r"""
+            (?:draws?\s+(?:a|their|his|her)\s+(?:weapon|sword|knife|dagger|blade)|
+            prepares?\s+(?:to|for)\s+(?:attack|strike|fight|battle|combat)|
+            gets?\s+(?:ready|prepared)\s+(?:to|for)\s+(?:attack|strike|fight|battle|combat)|
+            goes?\s+(?:on|into)\s+(?:the|a)\s+(?:offensive|attack)|
+            takes?\s+(?:up|a)\s+(?:fighting|combat)\s+(?:stance|position)|
+            assumes?\s+(?:a|the)\s+(?:fighting|combat|battle)\s+(?:stance|position)|
+            readies?\s+(?:a|their|his|her)\s+(?:weapon|sword|knife|dagger|blade))
+        """, re.VERBOSE | re.IGNORECASE),
+        
+        # Death and serious harm
+        re.compile(r"""
+            (?:kills?|slays?|murders?|destroys?|eliminates?|ends?|finishes?|takes?\s+out|
+            puts?\s+(?:an?\s+)?end\s+to|wipes?\s+out|eradicates?|annihilates?|obliterates?|
+            decimates?|exterminates?|slaughters?|butchers?|massacres?|disembowels?|decapitates?|
+            beheads?|eviscerates?|guts?|skins?\s+alive|flays?|tortures?(?:\s+to\s+death)?)
+            (?:\s+(?:you|the\s+player))?
+        """, re.VERBOSE | re.IGNORECASE)
+    ]
+    
+    def _filter_aggressive_response(self, text: str) -> str:
+        """
+        Filter out aggressive or combat-oriented responses from NPCs when the player
+        is just investigating or asking questions.
+        
+        This method checks the NPC's response against a set of precompiled regex patterns
+        that detect aggressive language, threats, or combat actions. If a match is found,
+        the response is modified to be less aggressive.
+        
+        Args:
+            text: The NPC's response text to filter. If None or empty, returns as-is.
+            
+        Returns:
+            str: The filtered response text with aggressive content replaced by a calmer
+                 alternative, or the original text if no aggressive content was found.
+        """
+        if not text:
+            return text
+            
+        # Check for any aggressive patterns in the text
+        for pattern in self._AGGRESSIVE_PATTERNS:
+            if pattern.search(text):
+                # Return a non-aggressive response by taking the first sentence and appending a calm message
+                first_sentence = text.split('.')[0].strip()
+                return f"{first_sentence}.\n\n[The NPC seems to reconsider their aggressive stance and calms down.]"
+        
+        return text
+
+    def _handle_talk(self, args: List[str]) -> str:
+        """
+        Handle conversation with an NPC.
+        
+        Args:
+            args: List of words containing the NPC's name and optional message
+            
+        Returns:
+            str: The NPC's dialogue or an error message
+        """
+        if not args:
+            return "Who would you like to talk to?"
+            
+        npc_name = args[0]
+        message = " ".join(args[1:]) if len(args) > 1 else ""
+        
+        # Store the NPC name for potential follow-up interactions
+        self.current_interaction_npc = npc_name
+        
+        # Get the current location and check if the NPC is there
+        current_location = self.current_player.current_location if self.current_player else None
+        if not current_location or current_location not in self.locations:
+            return "You're not in a location where you can talk to anyone."
+            
+        npc_names = self.locations[current_location].get('npcs', [])
+        npc_name_found = next((name for name in npc_names if name.lower() == npc_name.lower()), None)
+        
+        if not npc_name_found:
+            # Check if this is a new NPC we should create
+            if self.is_likely_npc_name(npc_name):
+                npc = self.create_random_npc(npc_name)
+                if current_location in self.locations and 'npcs' in self.locations[current_location]:
+                    self.locations[current_location]['npcs'].append(npc_name)
+                npc_name_found = npc_name
+            else:
+                return f"You don't see anyone named {npc_name} here."
+        
+        # Generate dialogue using the Groq engine
+        try:
+            # Prepare the conversation context
+            context = self.build_groq_context()
+            
+            # Add the current interaction to the context
+            context += f"\nPlayer: {message}" if message else ""
+            
+            # Generate the NPC's response
+            dialogue = self.groq_engine.generate_dialogue(
+                npc_name=npc_name_found,
+                player_message=message,
+                context=context,
+                location=current_location
+            )
+            
+            # Filter out aggressive responses if the player is just investigating
+            if any(word in message.lower() for word in ['what', 'how', 'when', 'where', 'why', 'who', 'which', 'describe', 'tell me about', 'look like']):
+                dialogue = self._filter_aggressive_response(dialogue)
+            
+            # Update the NPC's memory
+            self.npc_memory.update_memory(npc_name_found, f"Player said: {message}" if message else "Player greeted me")
+            
+            # Check if the NPC is giving the player an item
+            item_given = None
+            item_name = self._extract_gifted_item(dialogue)
+            if item_name and self.current_player:
+                item_given = self._generate_item_from_name(item_name)
+                if item_given:
+                    # Add the item to the player's inventory
+                    self.current_player.add_item(item_given)
+                    # Add a system message about the item
+                    system_msg = f"\n[System: {npc_name_found} gave you {item_name}. It has been added to your inventory.]"
+                    dialogue += system_msg
+                    
+                    # Log the item transfer
+                    logger.info(f"{npc_name_found} gave {self.current_player.name} {item_name}")
+            
+            # Add to conversation history
+            self.update_session_memory(
+                f"talked to {npc_name_found}",
+                f"{npc_name_found}: {dialogue}"
+            )
+            
+            return f"{npc_name_found}: {dialogue}"
+            
+        except Exception as e:
+            error_msg = f"Error generating dialogue: {str(e)}"
+            logger.error(error_msg)
+            return f"I'm having trouble understanding you right now. Could you try rephrasing that?"
+
+    def _classify_intent(self, text: str) -> str:
+        """
+        Classify the intent of the player's input text.
+        
+{{ ... }}
+        Args:
+            text: The player's input text
+            
+        Returns:
+            str: The classified intent (e.g., 'investigate', 'talk', 'combat', 'inventory')
+        """
+        text_lower = text.lower()
+        
+        # Check for investigation/observation intents
+        investigation_phrases = [
+            'what is', 'what are', 'what does', 'what do', 'what was',
+            'look at', 'examine', 'inspect', 'observe', 'check', 'view',
+            'describe', 'tell me about', 'show me', 'can you see', 'i see',
+            'i notice', 'i look', 'i examine', 'i check', 'i view',
+            'looks like', 'appears to be', 'seems like', 'i wonder',
+            'what kind of', 'what type of', 'what color', 'what size',
+            'how big', 'how small', 'how many', 'how much', 'where is',
+            'where are', 'when is', 'when was', 'who is', 'who are',
+            'why is', 'why are', 'how is', 'how are', 'is there', 'are there'
+        ]
+        
+        if any(phrase in text_lower for phrase in investigation_phrases):
+            return 'investigate'
+            
+        # Check for combat/aggressive intents
+        combat_phrases = [
+            'attack', 'fight', 'hit', 'kill', 'strike', 'punch', 'kick',
+            'shoot', 'stab', 'slice', 'slash', 'smash', 'destroy', 'hurt',
+            'harm', 'damage', 'assault', 'battle', 'combat', 'duel',
+            'i attack', 'i fight', 'i hit', 'i kill', 'i strike',
+            'i punch', 'i kick', 'i shoot', 'i stab', 'i slice',
+            'i slash', 'i smash', 'i destroy', 'i hurt', 'i harm',
+            'i damage', 'i assault', 'i battle', 'i duel'
+        ]
+        
+        if any(phrase in text_lower for phrase in combat_phrases):
+            return 'combat'
+            
+        # Check for talking/interaction intents
+        talk_phrases = [
+            'hello', 'hi', 'hey', 'greetings', 'good day', 'good morning',
+            'good afternoon', 'good evening', 'talk to', 'speak to',
+            'ask', 'tell', 'say to', 'converse with', 'chat with',
+            'greet', 'hail', 'address', 'call out to', 'yell at',
+            'shout at', 'whisper to', 'murmur to', 'mutter to',
+            'i say', 'i ask', 'i tell', 'i talk', 'i speak', 'i greet'
+        ]
+        
+        if any(phrase in text_lower for phrase in talk_phrases):
+            return 'talk'
+            
+        # Check for inventory/equipment intents
+        inventory_phrases = [
+            'inventory', 'items', 'equipment', 'gear', 'possessions',
+            'what do i have', 'what am i carrying', 'what am i wearing',
+            'what am i holding', 'what is in my', 'what is on me',
+            'i check my', 'i look at my', 'i examine my', 'i view my',
+            'show me my', 'list my', 'display my', 'what is in my inventory',
+            'what is in my pack', 'what is in my bag', 'what is in my sack',
+            'what is in my pouch', 'what is in my backpack', 'what is in my satchel'
+        ]
+        
+        if any(phrase in text_lower for phrase in inventory_phrases):
+            return 'inventory'
+            
+        # Default to 'investigate' for any unknown input to be safe
+        return 'investigate'
+
+    def _get_safe_response(self, intent: str, user_input: str) -> str:
+        """
+        Get a safe default response based on the classified intent.
+        
+        Args:
+            intent: The classified intent
+            user_input: The original user input
+            
+        Returns:
+            str: A safe response that won't trigger unwanted actions
+        """
+        if intent == 'investigate':
+            # For investigation, just describe what the player sees
+            return self._handle_look([])
+        elif intent == 'talk':
+            # For talk intents, check if there are NPCs to talk to
+            if self.current_player and self.current_player.current_location in self.locations:
+                npcs = self.locations[self.current_player.current_location].get('npcs', [])
+                if npcs:
+                    return f"Who would you like to talk to? You see {', '.join(npcs)} here."
+            return "There's no one here to talk to right now."
+        elif intent == 'inventory':
+            # For inventory, show the player's inventory
+            return self._handle_inventory([])
+        elif intent == 'combat':
+            # For combat, be very cautious and ask for confirmation
+            return "I'm not sure who or what you want to fight. Please be more specific, like 'attack the goblin'."
+            
+        # Default fallback response
+        return f"I'm not sure how to respond to that. Type 'help' for a list of commands."
 
     def process_input(self, user_input: str, context: Dict[str, Any] = None) -> str:
         """
@@ -1863,40 +2350,9 @@ class RPGGame:
             context: Optional context dictionary for additional information
             
         Returns:
-            str: The response to display to the user
+            str: The response to the user's input
         """
-        if not user_input.strip():
-            return "Please enter a command. Type 'help' for a list of commands."
-            
-        # Check for potential NPC names in the input
-        if self.current_player:
-            current_location = self.current_player.current_location
-            visible_npcs = self.get_visible_npcs()
-            
-            # Look for potential NPC names in the input
-            for word in user_input.split():
-                word_lower = word.lower()
-                # Skip if it's a command word, too short, or already a known NPC
-                if (len(word) < 3 or 
-                    word_lower in [cmd.lower() for cmd in self.command_handlers.keys()] or
-                    any(npc.lower() == word_lower for npc in visible_npcs)):
-                    continue
-                    
-                # Check if this looks like an NPC name
-                if self.is_likely_npc_name(word):
-                    # Create a new temporary NPC
-                    npc = self.create_random_npc(word)
-                    self.current_interaction_npc = npc.name
-                    return (
-                        f"A figure named {npc.name} notices your attention. "
-                        f"They look like a {npc.personality} {npc.role}.\n\n"
-                        f"{npc.name} says, '{random.choice(['Can I help you?', 'Hello there!', 'Yes?', 'Need something?'])}'"
-                    )
-        
-        # Add user input to history
-        self.add_to_history("user", user_input)
-        
-        input_lower = user_input.strip().lower()
+        input_lower = user_input.lower()
         
         # First check for exact command matches or single-letter commands with space after
         # This handles cases like "i " (inventory) vs "i call" (interaction)
@@ -1913,6 +2369,9 @@ class RPGGame:
                     self.add_to_history("system", f"ERROR: {error_msg}")
                     return error_msg
         
+        # Classify the intent of the input
+        intent = self._classify_intent(user_input)
+        
         # Track if this is a follow-up interaction with the last NPC
         if self.current_interaction_npc and self._is_follow_up_interaction(input_lower):
             # Handle follow-up interaction with the last NPC
@@ -1924,14 +2383,36 @@ class RPGGame:
             location_data = self.locations[current_location]
             npc_names = location_data.get('npcs', [])
             
-            # Check if the input is directed at an NPC
+            # First, check for comma-separated addressing (e.g., "Marla, hello")
             for npc_name in npc_names:
                 npc_lower = npc_name.lower()
-                # Check for patterns like "tell [npc]" or "ask [npc]" or "[npc],"
-                if (f" {npc_lower} " in f" {input_lower} " or  # NPC name in the middle
-                    input_lower.startswith(f"{npc_lower} ") or  # Starts with NPC name
-                    f", {npc_lower}" in f" {input_lower}" or  # After a comma
+                # Check for patterns like "Marla, hello" or "Hello, Marla"
+                if (f", {npc_lower}" in f" {input_lower}," or  # After a comma
+                    f"{npc_lower}," in f"{input_lower}," or  # Before a comma
+                    f"{npc_lower} " in f"{input_lower} " or  # At start of input
+                    f" {npc_lower} " in f" {input_lower} " or  # In middle of input
+                    input_lower.endswith(f" {npc_lower}") or  # At end of input
                     input_lower == npc_lower):  # Just the NPC name
+                    
+                    # Remove the NPC name and any leading/trailing punctuation
+                    clean_input = input_lower.replace(f", {npc_lower}", "").replace(f"{npc_lower},", "")
+                    clean_input = clean_input.replace(npc_lower, "").strip(" ,.!?;:")
+                    
+                    self.current_interaction_npc = npc_name
+                    # If there's any remaining text after removing the name, use it as the message
+                    if clean_input:
+                        return self._handle_talk([npc_name, clean_input])
+                    return self._handle_talk([npc_name])
+            
+            # Then check for other natural language patterns
+            for npc_name in npc_names:
+                npc_lower = npc_name.lower()
+                # Check for patterns like "tell [npc]" or "ask [npc]"
+                if any(prefix in input_lower for prefix in [
+                    f"tell {npc_lower}", f"ask {npc_lower}", 
+                    f"talk to {npc_lower}", f"speak to {npc_lower}",
+                    f"hey {npc_lower}", f"hello {npc_lower}", f"hi {npc_lower}"
+                ]):
                     self.current_interaction_npc = npc_name
                     return self._handle_talk([npc_name])
                 
@@ -1939,28 +2420,32 @@ class RPGGame:
                 if f"call out to {npc_lower}" in input_lower:
                     self.current_interaction_npc = npc_name
                     return f"You call out to {npc_name}.\n" + self._handle_talk([npc_name])
+                    
+            # If we get here, no NPC was specifically addressed
+            # Check if the input contains any NPC names at all (for better error messages)
+            mentioned_npcs = [npc for npc in npc_names if npc.lower() in input_lower]
+            if mentioned_npcs and len(input_lower.split()) > 2:
+                return f"I'm not sure who you're trying to talk to. Try addressing an NPC by name, like '{mentioned_npcs[0]}, can you help me?'"
         
-        # If we get here, no command matched - check for common patterns
-        if any(word in input_lower for word in ["talk to", "speak to", "ask", "tell"]):
-            # If we have a current interaction NPC, direct the message to them
-            if self.current_interaction_npc:
-                return self._handle_talk([self.current_interaction_npc])
-            return "Who would you like to talk to?"
-            
-        # Check if this looks like an attempt to interact with an NPC
-        if any(word in input_lower for word in ["hello", "hi", "hey", "greet"]):
-            if current_location and current_location in self.locations:
-                npc_names = self.locations[current_location].get('npcs', [])
-                if npc_names:
-                    # If we have a current interaction NPC, greet them
-                    if self.current_interaction_npc and self.current_interaction_npc in npc_names:
-                        return f"You greet {self.current_interaction_npc}.\n" + self._handle_talk([self.current_interaction_npc])
-                    # Otherwise greet the first NPC in the location
-                    self.current_interaction_npc = npc_names[0]
-                    return f"You greet {npc_names[0]}.\n" + self._handle_talk([npc_names[0]])
+        # If we get here, no command matched - use intent classification to handle the input
+        safe_response = self._get_safe_response(intent, user_input)
         
-        # If no command matched and it's not an NPC interaction, show help
-        return f"I'm not sure what you mean by '{user_input}'. Type 'help' for a list of commands or try 'talk to [NPC]' to speak with someone."
+        # If we have a current interaction NPC and the intent is to talk, 
+        # try to direct the message to them
+        if intent == 'talk' and self.current_interaction_npc:
+            # If the input is just a greeting, use the NPC's name
+            if any(word in input_lower for word in ["hello", "hi", "hey", "greet"]):
+                return f"You greet {self.current_interaction_npc}.\n" + self._handle_talk([self.current_interaction_npc])
+            # Otherwise, treat it as a statement to the NPC
+            return f"You say to {self.current_interaction_npc}, \"{user_input}\"\n\n" + self._handle_talk([self.current_interaction_npc, user_input])
+        
+        # For investigation intents, add a hint about the look command
+        if intent == 'investigate' and safe_response == self._handle_look([]):
+            safe_response += "\n\n(You can also type 'look [object]' to examine specific things more closely.)"
+        
+        # Add the response to history and return it
+        self.add_to_history("assistant", safe_response)
+        return safe_response
 
     def _handle_time(self, args: List[str]) -> str:
         """
@@ -3070,7 +3555,8 @@ Attributes: {json.dumps(item.stats, indent=2)}
                         item['item_type'], 
                         item.get('stats', {}),
                         item.get('stackable', False), 
-                        item.get('max_stack', 1)
+                        item.get('max_stack', 1),
+                        item.get('temporary', False)  # Load the temporary flag, default to False for backward compatibility
                     )
                     for item in player_data['inventory']
                 ]
@@ -3080,15 +3566,36 @@ Attributes: {json.dumps(item.stats, indent=2)}
                 equipped = player_data['equipped']
                 if 'weapon' in equipped and equipped['weapon']:
                     w = equipped['weapon']
-                    self.current_player.equipped['weapon'] = Item(w['name'], w['item_type'], w.get('stats', {}))
+                    self.current_player.equipped['weapon'] = Item(
+                        w['name'], 
+                        w['item_type'], 
+                        w.get('stats', {}),
+                        w.get('stackable', False),
+                        w.get('max_stack', 1),
+                        w.get('temporary', False)  # Load the temporary flag for equipped weapon
+                    )
                     
                 if 'armor' in equipped and equipped['armor']:
                     a = equipped['armor']
-                    self.current_player.equipped['armor'] = Item(a['name'], a['item_type'], a.get('stats', {}))
+                    self.current_player.equipped['armor'] = Item(
+                        a['name'], 
+                        a['item_type'], 
+                        a.get('stats', {}),
+                        a.get('stackable', False),
+                        a.get('max_stack', 1),
+                        a.get('temporary', False)  # Load the temporary flag for equipped armor
+                    )
                 
                 if 'accessories' in equipped:
                     self.current_player.equipped['accessories'] = [
-                        Item(acc['name'], acc['item_type'], acc.get('stats', {}))
+                        Item(
+                            acc['name'], 
+                            acc['item_type'], 
+                            acc.get('stats', {}),
+                            acc.get('stackable', False),
+                            acc.get('max_stack', 1),
+                            acc.get('temporary', False)  # Load the temporary flag for accessories
+                        )
                         for acc in equipped['accessories']
                     ]
             
