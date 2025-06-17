@@ -14,9 +14,40 @@ app = Flask(__name__)
 groq_engine = GroqEngine()
 game = RPGGame(groq_engine=groq_engine, save_dir="saves")
 
+@app.route('/api/command', methods=['POST'])
+def handle_command():
+    if not game.current_player:
+        return jsonify({"error": "No active game session"}), 400
+        
+    data = request.json
+    if not data or 'command' not in data:
+        return jsonify({"error": "No command provided"}), 400
+        
+    try:
+        # Process the command through the game's command system
+        result = game.process_input(data['command'])
+        return jsonify({"message": result})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
 @app.route('/')
 def index():
     return render_template('index.html')
+
+@app.route('/api/save_game', methods=['POST'])
+def save_game():
+    if not game.current_player:
+        return jsonify({"error": "No active game to save"}), 400
+        
+    save_name = request.json.get('save_name', 'autosave')
+    result = game.save_game(save_name)
+    return jsonify({"message": result})
+
+@app.route('/api/load_game', methods=['POST'])
+def load_game():
+    save_name = request.json.get('save_name', 'autosave')
+    result = game.load_game(save_name)
+    return jsonify({"message": result})
 
 @app.route('/api/init_game', methods=['POST'])
 def init_game():
@@ -51,13 +82,27 @@ def create_character():
 @app.route('/api/get_player_status', methods=['GET'])
 def get_player_status():
     if game.current_player:
+        # Get equipped items
+        equipment = {}
+        if hasattr(game.current_player, 'equipped'):
+            for slot, item in game.current_player.equipped.items():
+                if item:
+                    equipment[slot] = {
+                        'name': getattr(item, 'name', 'Unknown'),
+                        'type': getattr(item, 'item_type', 'item'),
+                        'durability': getattr(item, 'durability', 100)
+                    }
+                else:
+                    equipment[slot] = None
+        
         return jsonify({
             "name": game.current_player.name,
             "class": game.current_player.character_class,
             "health": game.current_player.hit_points,
             "max_health": game.current_player.calculate_hit_points(),
             "level": game.current_player.level,
-            "attributes": game.current_player.attributes
+            "attributes": game.current_player.attributes,
+            "equipment": equipment
         })
     return jsonify({"error": "No player created"}), 400
 

@@ -36,7 +36,8 @@
             border-bottom: 2px solid var(--accent-color);
         }
 
-        #character-creation {
+        #character-creation,
+        #save-load-panel {
             margin: 0 auto 20px;
             padding: 20px;
             max-width: 600px;
@@ -44,6 +45,10 @@
             border-radius: 8px;
             background-color: var(--panel-bg);
             box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+        }
+        
+        #save-load-panel {
+            display: none; /* Hidden by default, shown after game starts */
         }
 
         .form-group {
@@ -143,49 +148,87 @@
             line-height: 1.5;
         }
 
-        .console-command {
-            color: #1a73e8;
-            margin: 5px 0;
-            padding: 8px;
-            border-radius: 4px;
-            background-color: #e3f2fd;
-        }
-
-        .console-response {
-            color: #333;
-            margin: 5px 0;
-            padding: 8px;
-            border-radius: 4px;
-            background-color: #fff;
-            max-height: 400px;
-            overflow-y: auto;
-        }
-
-        .console-error {
-            color: #c62828;
-            margin: 5px 0;
-            padding: 8px;
-            border-radius: 4px;
-            background-color: #ffebee;
-        }
         .console-entry {
             margin: 10px 0;
             padding: 10px;
             border-radius: 5px;
         }
-        .console-prompt {
-            background-color: #e3f2fd;
-        }
-        .console-response {
-            background-color: #f3f3f3;
-        }
-        .console-error {
-            background-color: #ffebee;
-            color: #c62828;
-        }
-        .console-system {
-            background-color: #f5f5f5;
+        
+        .console-command {
+            color: #3498db;
             font-weight: bold;
+            margin: 8px 0;
+            padding: 8px 12px;
+            background-color: rgba(52, 152, 219, 0.1);
+            border-left: 3px solid #3498db;
+            border-radius: 0 4px 4px 0;
+            font-family: 'Courier New', monospace;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+        
+        .console-response {
+            color: #2ecc71;
+            margin: 8px 0;
+            padding: 8px 12px;
+            background-color: rgba(46, 204, 113, 0.1);
+            border-left: 3px solid #2ecc71;
+            border-radius: 0 4px 4px 0;
+            font-family: 'Courier New', monospace;
+            max-height: 400px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+        
+        .console-error {
+            color: #e74c3c;
+            margin: 8px 0;
+            padding: 8px 12px;
+            background-color: rgba(231, 76, 60, 0.1);
+            border-left: 3px solid #e74c3c;
+            border-radius: 0 4px 4px 0;
+            font-family: 'Courier New', monospace;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+        
+        .console-info {
+            color: #3498db;
+            margin: 8px 0;
+            padding: 8px 12px;
+            background-color: rgba(52, 152, 219, 0.1);
+            border-left: 3px solid #3498db;
+            border-radius: 0 4px 4px 0;
+            font-family: 'Courier New', monospace;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+        
+        .console-system {
+            color: #9b59b6;
+            font-style: italic;
+            margin: 8px 0;
+            padding: 8px 12px;
+            background-color: rgba(155, 89, 182, 0.1);
+            border-left: 3px solid #9b59b6;
+            border-radius: 0 4px 4px 0;
+            font-family: 'Courier New', monospace;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+        
+        .console-success {
+            color: #2ecc71;
+            font-weight: bold;
+            margin: 8px 0;
+            padding: 8px 12px;
+            background-color: rgba(46, 204, 113, 0.1);
+            border-left: 3px solid #2ecc71;
+            border-radius: 0 4px 4px 0;
+            font-family: 'Courier New', monospace;
+            white-space: pre-wrap;
+            word-break: break-word;
         }
 
         #console-input {
@@ -522,6 +565,45 @@
         .progress.mana { background: #3498db; }
         .progress.exp { background: #f1c40f; }
         
+        .status-section {
+            margin-top: 15px;
+            padding: 10px;
+            background-color: rgba(255, 255, 255, 0.05);
+            border-radius: 4px;
+        }
+        
+        .equipment-display {
+            margin-top: 10px;
+        }
+        
+        .equipment-item {
+            display: flex;
+            align-items: center;
+            padding: 5px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .equipment-slot {
+            font-weight: bold;
+            min-width: 100px;
+            color: #3498db;
+        }
+        
+        .equipment-name {
+            flex-grow: 1;
+        }
+        
+        .equipment-durability {
+            color: #95a5a6;
+            font-size: 0.9em;
+        }
+        
+        .equipment-empty {
+            color: #7f8c8d;
+            font-style: italic;
+            padding: 5px 0;
+        }
+        
         .value {
             position: absolute;
             right: 8px;
@@ -618,6 +700,20 @@
             <button onclick="createCharacter()">Create Character</button>
         </div>
 
+        <!-- Save/Load Panel -->
+        <div id="save-load-panel">
+            <h2>Game Management</h2>
+            <div class="form-group">
+                <label for="save-name">Save Name:</label>
+                <input type="text" id="save-name" placeholder="Enter save name">
+            </div>
+            <div class="form-group" style="display: flex; gap: 10px;">
+                <button onclick="saveGame()" style="background-color: #27ae60;">Save Game</button>
+                <button onclick="loadGame()" style="background-color: #2980b9;">Load Game</button>
+            </div>
+            <div id="save-status" style="margin-top: 10px; color: #2ecc71; display: none;"></div>
+        </div>
+
         <div id="game-content">
             <div id="game-output"></div>
             
@@ -643,6 +739,12 @@
                     </div>
                     <div id="status-content">
                         <div class="loading">Loading character status...</div>
+                        <div class="status-section">
+                            <h4>Equipment</h4>
+                            <div id="equipment-display" class="equipment-display">
+                                <div class="equipment-empty">No equipment equipped</div>
+                            </div>
+                        </div>
                     </div>
                 </div>
                 
@@ -687,7 +789,8 @@
             RESPONSE: 'response',
             ERROR: 'error',
             INFO: 'info',
-            SYSTEM: 'system'
+            SYSTEM: 'system',
+            SUCCESS: 'success'
         };
 
         // Game state variables
@@ -732,6 +835,71 @@
         const playerLevelElement = document.getElementById('player-level');
         const playerHealthElement = document.getElementById('player-health');
 
+        // Handle key press in console input
+        function handleKeyPress(event) {
+            if (event.key === 'Enter') {
+                sendConsoleCommand();
+            }
+        }
+        
+        // Send command from console input
+        async function sendConsoleCommand() {
+            const inputElement = document.getElementById('console-input');
+            const command = inputElement.value.trim();
+            
+            if (!command) return;
+            
+            // Add command to console
+            addConsoleMessage(CONSOLE_TYPES.COMMAND, `> ${command}`);
+            
+            // Clear input
+            inputElement.value = '';
+            
+            // Handle special commands
+            const parts = command.split(' ');
+            const cmd = parts[0].toLowerCase();
+            const args = parts.slice(1);
+            
+            try {
+                switch (cmd) {
+                    case 'save':
+                        const saveName = args[0] || 'autosave';
+                        document.getElementById('save-name').value = saveName;
+                        await saveGame();
+                        break;
+                        
+                    case 'load':
+                        const loadName = args[0] || 'autosave';
+                        document.getElementById('save-name').value = loadName;
+                        await loadGame();
+                        break;
+                        
+                    default:
+                        // Send other commands to the server
+                        const response = await fetch('/api/command', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({
+                                command: command
+                            })
+                        });
+                        
+                        const data = await response.json();
+                        
+                        if (!response.ok) {
+                            throw new Error(data.error || 'Command failed');
+                        }
+                        
+                        addConsoleMessage(CONSOLE_TYPES.RESPONSE, data.message || 'Command executed');
+                }
+            } catch (error) {
+                addConsoleMessage(CONSOLE_TYPES.ERROR, error.message);
+                console.error('Error executing command:', error);
+            }
+        }
+        
         // Toggle character creation vs game content
         function toggleCharacterCreation() {
             if (!player) {
@@ -765,6 +933,7 @@
                     })
                 });
 
+
                 const data = await response.json();
                 if (!response.ok) {
                     throw new Error(data.error || 'Failed to create character');
@@ -772,11 +941,91 @@
 
                 player = data.character;
                 toggleCharacterCreation();
+                // Show the save/load panel after character creation
+                document.getElementById('save-load-panel').style.display = 'block';
                 updatePlayerStatus();
                 updateEquipmentDisplay();
-                updateConsole('Character created successfully!');
+                addConsoleMessage(CONSOLE_TYPES.SUCCESS, 'Character created successfully!');
             } catch (error) {
-                updateConsole(`Error creating character: ${error.message}`);
+                addConsoleMessage(CONSOLE_TYPES.ERROR, `Error creating character: ${error.message}`);
+            }
+        }
+        
+        // Save the current game state
+        async function saveGame() {
+            const saveName = document.getElementById('save-name').value.trim() || 'autosave';
+            const statusElement = document.getElementById('save-status');
+            
+            try {
+                const response = await fetch('/api/save_game', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        save_name: saveName
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (!response.ok) {
+                    throw new Error(data.error || 'Failed to save game');
+                }
+                
+                // Show success message
+                statusElement.textContent = `Game saved as '${saveName}'`;
+                statusElement.style.color = '#2ecc71';
+                statusElement.style.display = 'block';
+                
+                // Hide the message after 3 seconds
+                setTimeout(() => {
+                    statusElement.style.display = 'none';
+                }, 3000);
+                
+                addConsoleMessage(CONSOLE_TYPES.SUCCESS, `Game saved as '${saveName}'`);
+                return data;
+            } catch (error) {
+                statusElement.textContent = `Error saving game: ${error.message}`;
+                statusElement.style.color = '#e74c3c';
+                statusElement.style.display = 'block';
+                addConsoleMessage(CONSOLE_TYPES.ERROR, `Error saving game: ${error.message}`);
+                console.error('Error saving game:', error);
+            }
+        }
+        
+        // Load a saved game
+        async function loadGame() {
+            const saveName = document.getElementById('save-name').value.trim() || 'autosave';
+            const statusElement = document.getElementById('save-status');
+            
+            try {
+                const response = await fetch('/api/load_game', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        save_name: saveName
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (!response.ok) {
+                    throw new Error(data.error || 'Failed to load game');
+                }
+                
+                // Reload the page to reflect the loaded game state
+                location.reload();
+                
+                return data;
+            } catch (error) {
+                statusElement.textContent = `Error loading game: ${error.message}`;
+                statusElement.style.color = '#e74c3c';
+                statusElement.style.display = 'block';
+                addConsoleMessage(CONSOLE_TYPES.ERROR, `Error loading game: ${error.message}`);
+                console.error('Error loading game:', error);
             }
         }
 
@@ -794,8 +1043,49 @@
                 playerNameElement.textContent = data.name;
                 playerClassElement.textContent = data.class;
                 playerHealthElement.textContent = data.health;
+                
+                // Update equipment display when updating status
+                if (data.equipment) {
+                    updateEquipmentDisplay(data.equipment);
+                }
             } catch (error) {
                 console.error('Error getting player status:', error);
+            }
+        }
+        
+        // Update equipment display with current equipment
+        function updateEquipmentDisplay(equipment) {
+            try {
+                const equipmentContainer = document.getElementById('equipment-display');
+                if (!equipmentContainer) return;
+                
+                // Clear existing equipment
+                equipmentContainer.innerHTML = '';
+                
+                // Add each equipped item to the display
+                for (const [slot, item] of Object.entries(equipment || {})) {
+                    if (item) {
+                        const itemElement = document.createElement('div');
+                        itemElement.className = 'equipment-item';
+                        itemElement.innerHTML = `
+                            <span class="equipment-slot">${slot}:</span>
+                            <span class="equipment-name">${item.name || 'None'}</span>
+                            ${item.durability ? `<span class="equipment-durability">(${item.durability}%)</span>` : ''}
+                        `;
+                        equipmentContainer.appendChild(itemElement);
+                    }
+                }
+                
+                // If no equipment, show a message
+                if (Object.keys(equipment || {}).length === 0) {
+                    const noItems = document.createElement('div');
+                    noItems.className = 'equipment-empty';
+                    noItems.textContent = 'No equipment equipped';
+                    equipmentContainer.appendChild(noItems);
+                }
+                
+            } catch (error) {
+                console.error('Error updating equipment display:', error);
             }
         }
 

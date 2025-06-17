@@ -3,17 +3,16 @@ import os
 import time
 import logging
 import random
-from typing import Dict, Any, List, Optional
+from collections import deque
+from typing import Dict, Any, List, Optional, Deque, Union, Tuple, Set
 from pathlib import Path
 import save_system
 import functools
 import re
 import sys
-from typing import Dict, List, Optional, Tuple, Set, Any, Union
 from dataclasses import dataclass, field, asdict
 from datetime import datetime
 from enum import Enum
-from pathlib import Path
 from groq import Groq
 from cachetools import LRUCache, cached
 from dotenv import load_dotenv
@@ -55,6 +54,7 @@ class NPC:
         self.last_seen: datetime = datetime.now()
         self.is_merchant: bool = False
         self.merchant_inventory: List[Dict] = []
+        self.temporary: bool = False  # Whether this is a temporary NPC
         
     def update_relationship(self, entity_id: str, affinity_change: int = 0, fact: Optional[str] = None) -> NPCRelationship:
         """Update relationship with another entity."""
@@ -300,39 +300,36 @@ class GroqEngine:
                 "Keep the description concise but evocative, around 2-3 paragraphs maximum."
             )
             
-            user_prompt = f"Describe the location: {context.get('location', 'a place')}"
-            if 'description' in context and context['description']:
-                user_prompt += f"\nBase description: {context['description']}"
-                
-            if npc_descriptions:
-                user_prompt += "\n\nPeople you see here:" + "\n- " + "\n- ".join(npc_descriptions)
-                
-            if 'instructions' in context:
-                user_prompt += f"\n\n{context['instructions']}"
+            # Format the user prompt with location and NPCs
+            location = context.get('location', 'an unknown location')
+            npcs_text = "\n".join(npc_descriptions) if npc_descriptions else "There is no one else here."
             
-            messages = [
-                {"role": "system", "content": system_prompt},
-                {"role": "user", "content": user_prompt}
-            ]
-            
-            response = self.client.chat.completions.create(
-                model=self.model,
-                messages=messages,
-                max_tokens=400,  # Increased for more detailed descriptions
-                temperature=0.7,
-                top_p=0.9
+            user_prompt = (
+                f"Describe the following location in a fantasy RPG setting.\n"
+                f"Location: {location}\n"
+                f"NPCs present:\n{npcs_text}\n\n"
+                f"Provide a rich, immersive description that includes sensory details. "
+                f"Mention any notable features, atmosphere, and the general feeling of the place. "
+                f"If there are NPCs, briefly describe what they're doing in the location."
             )
             
-            return response.choices[0].message.content.strip()
+            # Generate the description
+            response = self.client.chat.completions.create(
+                model=self.model,
+                messages=[
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": user_prompt}
+                ],
+                temperature=0.7,
+                max_tokens=500
+            )
+            
+            description = response.choices[0].message.content.strip()
+            return description
             
         except Exception as e:
             logger.error(f"Error generating description: {e}")
-            fallback = f"You are in {context.get('location', 'an unknown location')}."
-            if 'npcs' in context and context['npcs']:
-                npc_names = ", ".join([npc.get('name', 'Someone') for npc in context['npcs']])
-                fallback += f" You see {npc_names} here."
-            return fallback
-    
+            return f"You are in {context.get('location', 'an unknown location')}."
     def clear_cache(self) -> None:
         """Clear the description cache."""
         self.description_cache.clear()
@@ -340,9 +337,9 @@ class GroqEngine:
 
     def generate_npc_dialogue(self, npc_name: str, player_name: str, location: str, 
                            player_message: str = "", npc_role: str = "person", 
-                           player_class: str = "adventurer") -> str:
+                           player_class: str = "adventurer", game_context: Dict[str, Any] = None) -> str:
         """
-        Generate NPC dialogue using Groq AI.
+        Generate NPC dialogue using Groq AI with full context.
         
         Args:
             npc_name: Name of the NPC
@@ -351,42 +348,107 @@ class GroqEngine:
             player_message: Optional message from the player
             npc_role: The role/occupation of the NPC
             player_class: The class/occupation of the player character
+            game_context: Dictionary containing game state information including:
+                - conversation_history: List of previous messages in the conversation
+                - memory_summary: Summary of important events and facts
+                - player: Player character information
+                - current_location: Current location name
+                - npcs_present: List of NPCs in the current location
             
         Returns:
             str: The NPC's response
         """
         if not self.client:
-            return "The NPC seems to be ignoring you."
+            return f"{npc_name} seems to be deep in thought and doesn't respond."
             
         try:
+            # Prepare the conversation history
+            conversation_history = game_context.get('conversation_history', []) if game_context else []
+            memory_summary = game_context.get('memory_summary', 'No previous memories.') if game_context else 'No previous memories.'
+            player = game_context.get('player', {}) if game_context else {}
+            current_location = game_context.get('current_location', location) if game_context else location
+            npcs_present = game_context.get('npcs_present', []) if game_context else []
             
-            system_prompt = (
-                f"You are {npc_name}, a {npc_role} in a fantasy RPG. "
-                f"You are currently in {location}. "
-                f"You are talking to {player_name}, a {player_class}. "
-                "Keep your responses concise, in-character, and appropriate for your role. "
-                "If the player is being rude or aggressive, respond accordingly. "
-                "If you don't know something, make something up that fits the setting."
-            )
+            # Limit conversation history to last 10 messages to avoid token limits
+            recent_history = conversation_history[-10:] if conversation_history else []
             
-            messages = [
-                {"role": "system", "content": system_prompt},
-                {"role": "user", "content": player_message or f"{player_name} approaches you."}
-            ]
+            # Format the conversation history
+            formatted_history = []
+            for msg in recent_history:
+                role = msg.get('role', 'unknown').capitalize()
+                content = msg.get('content', '')
+                formatted_history.append(f"{role}: {content}")
             
+            # Get player stats if available
+            player_stats = ""
+            if player:
+                player_stats = (
+                    f"Player Level: {player.get('level', 1)}\n"
+                    f"Class: {player.get('character_class', 'Adventurer')}\n"
+                    f"HP: {player.get('hit_points', 10)}/{player.get('max_hit_points', 10)}"
+                )
+            
+            # Build the system prompt with full context
+            system_prompt = f"""
+            You are {npc_name}, a {npc_role} in a fantasy RPG. You are currently in {current_location}.
+            
+            Remember the following facts from earlier in the adventure:
+            {memory_summary}
+            
+            Player Information:
+            Name: {player_name}
+            {player_stats}
+            
+            Other NPCs present: {', '.join(npcs_present) if npcs_present else 'None'}
+            
+            Recent conversation:
+            {chr(10).join(formatted_history) if formatted_history else 'No recent conversation.'}
+            
+            Guidelines for your response:
+            - Stay in character as {npc_name}, a {npc_role}
+            - Keep responses concise (1-3 sentences)
+            - Be consistent with the established world and lore
+            - If the player is being rude or aggressive, respond accordingly
+            - If you don't know something, make something up that fits the setting
+            - Reference past events or conversations when relevant
+            - React appropriately to the player's actions and words
+            - If the player asks about something you wouldn't know, say so in character
+            - If appropriate, suggest actions or next steps
+            
+            IMPORTANT SANITY CHECKS:
+            - Only reference locations, characters, and events that have been previously established
+            - If a location or character hasn't been introduced, do not invent them
+            - Keep your response consistent with the established facts and history
+            - If uncertain about a fact, say so instead of making something up
+            - Maintain consistency with the NPC's knowledge and background
+            - If the player asks about something your character wouldn't know, respond appropriately in character
+            - Do not break the fourth wall or reference the fact that you're an AI
+            - If the player tries to discuss modern or out-of-game topics, respond in a way that fits the fantasy setting
+            """
+            
+            # Prepare the user message
+            user_message = player_message or f"{player_name} approaches you."
+            
+            # Generate the response
             response = self.client.chat.completions.create(
                 model=self.model,
-                messages=messages,
-                max_tokens=150,
-                temperature=0.7,
-                top_p=0.9
+                messages=[
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": user_message}
+                ],
+                temperature=0.8,  # Slightly more creative for dialogue
+                max_tokens=300,   # Increased for more detailed responses
+                top_p=0.9,
+                stream=False
             )
             
-            return response.choices[0].message.content.strip()
+            # Extract and clean the response
+            npc_response = response.choices[0].message.content.strip()
+            return npc_response
             
         except Exception as e:
             logger.error(f"Error generating NPC dialogue: {e}")
-            return f"{npc_name} seems to be lost in thought..."
+            return f"{npc_name} seems to be having trouble responding right now."
 
     def generate_description(self, context: Dict[str, Any]) -> str:
         """Generate a location description using Groq AI."""
@@ -841,12 +903,17 @@ class RPGGame:
         self.current_enemy = None
         self.session_history: List[Dict[str, str]] = []
         self.npc_memory = NPCMemory()
+        self.temporary_npcs = {}  # Track dynamically created NPCs
         self.game_time = {
             'day': 1,
             'hour': 8,  # Start at 8:00 AM
             'minute': 0,
             'last_updated': time.time()
         }
+        
+        # Memory system
+        self.conversation_history: Deque[Dict[str, str]] = deque(maxlen=100)
+        self.memory_summary: str = ""
         # Ensure save directory exists
         os.makedirs(self.save_dir, exist_ok=True)
         self.command_handlers = {
@@ -861,7 +928,6 @@ class RPGGame:
             
             # Inventory and equipment
             "inventory": self._handle_inventory,
-            "i": self._handle_inventory,
             "equip": self._handle_equip,
             
             # Character status
@@ -907,6 +973,9 @@ class RPGGame:
         # Initialize location cache
         self._current_location_cache = {}
         self._last_known_player_location = None
+        self.current_interaction_npc = None  # Track the last NPC the player interacted with
+        self.temporary_npcs = {}  # Track dynamically created NPCs
+        self.dynamic_locations = {}  # Track dynamically created locations
         
         # Initialize game data
         self.locations = {}
@@ -958,8 +1027,78 @@ class RPGGame:
             }
         }
 
+    def is_likely_npc_name(self, name: str) -> bool:
+        """Check if a word is likely an NPC name."""
+        # Basic checks for potential NPC names
+        return (
+            len(name) > 2 and  # At least 3 characters
+            name[0].isupper() and  # Starts with uppercase
+            name.isalpha()  # Only letters
+        )
+
+    def create_random_npc(self, name: str) -> NPC:
+        """
+        Create a random NPC with the given name.
+        
+        Args:
+            name: The name for the new NPC
+            
+        Returns:
+            NPC: The newly created NPC
+        """
+        # Define possible roles and traits
+        roles = ["traveler", "merchant", "hunter", "bard", "child", "beggar", "adventurer", "scholar"]
+        personalities = ["friendly", "gruff", "curious", "secretive", "nervous", "charming", "stoic", "talkative"]
+        factions = ["travelers", "merchants", "hunters", "bards", "commoners"]
+        
+        # Get current location
+        location = self.current_player.current_location if self.current_player else "Starting Town"
+        
+        # Create the NPC
+        npc = NPC(
+            name=name.capitalize(),
+            role=random.choice(roles),
+            location=location,
+            faction=random.choice(factions)
+        )
+        
+        # Add some personality
+        npc.personality = random.choice(personalities)
+        
+        # Mark as temporary
+        npc.temporary = True
+        
+        # Add to memory and temporary tracking
+        self.npc_memory.add_npc(npc)
+        self.temporary_npcs[npc.name.lower()] = npc
+        
+        # Add to current location's NPCs if not already there
+        if location in self.locations:
+            if npc.name not in self.locations[location].get('npcs', []):
+                self.locations[location]['npcs'].append(npc.name)
+        
+        return npc
+        
+    def remove_temporary_npcs(self):
+        """Remove all temporary NPCs from the game."""
+        for npc_name in list(self.temporary_npcs.keys()):
+            # Remove from NPC memory
+            if npc_name in self.npc_memory.npcs:
+                del self.npc_memory.npcs[npc_name]
+            
+            # Remove from location NPC lists
+            for location in self.locations.values():
+                if 'npcs' in location and npc_name.capitalize() in location['npcs']:
+                    location['npcs'].remove(npc_name.capitalize())
+        
+        # Clear the temporary NPCs dictionary
+        self.temporary_npcs.clear()
+    
     def _initialize_npcs(self):
         """Initialize NPCs in the game world."""
+        # Clear any existing temporary NPCs when reinitializing
+        self.remove_temporary_npcs()
+        
         # Starting Town NPCs
         # Eldrin now runs the Apothecary
         eldrin = NPC("Eldrin", "Apothecary", "Apothecary's Shop", "merchants")
@@ -1133,7 +1272,16 @@ class RPGGame:
             
         response = []
         
-        # Show equipped items first
+        # Show gold pieces first
+        gold_item = next((item for item in self.current_player.inventory if item.name == "Gold Pieces"), None)
+        if gold_item and hasattr(gold_item, 'quantity'):
+            response.append(f"Gold: {gold_item.quantity} gp")
+        else:
+            response.append("Gold: 0 gp")
+            
+        response.append("")
+        
+        # Show equipped items next
         equipped_items = []
         if self.current_player.equipped["weapon"]:
             equipped_items.append(f"Weapon: {self.current_player.equipped['weapon'].name}")
@@ -1201,9 +1349,67 @@ class RPGGame:
                 return self.current_player.equip_item(item)
         return f"You don't have '{item_name}' in your inventory."
 
+    def create_dynamic_location(self, location_name: str, connected_to: str = None) -> Dict[str, Any]:
+        """
+        Create a new dynamic location with a procedurally generated description.
+        
+        Args:
+            location_name: Name of the new location
+            connected_to: Optional name of the location this connects to
+            
+        Returns:
+            Dict containing the new location data
+        """
+        # Define location themes and features for procedural generation
+        themes = [
+            ("ancient", "ruins", "moss-covered", "crumbling"),
+            ("enchanted", "grove", "vibrant", "magical"),
+            ("forgotten", "cave", "dark", "echoing"),
+            ("hidden", "glade", "peaceful", "sun-dappled"),
+            ("mysterious", "tower", "looming", "imposing")
+        ]
+        
+        # Choose a random theme
+        theme = random.choice(themes)
+        
+        # Generate description based on theme
+        description = (
+            f"You find yourself in {theme[0]} {theme[1]}. "
+            f"The area is {theme[2]} and {theme[3]}. "
+            f"There's a sense of mystery in the air."
+        )
+        
+        # Create the location data
+        location_data = {
+            'description': description,
+            'connections': [],
+            'npcs': [],
+            'is_dynamic': True,
+            'discovered_at': self.get_current_time_str()
+        }
+        
+        # If connected_to is provided, create a two-way connection
+        if connected_to:
+            location_data['connections'].append(connected_to)
+            # Also add connection back from the connected location
+            if connected_to in self.locations:
+                if 'connections' not in self.locations[connected_to]:
+                    self.locations[connected_to]['connections'] = []
+                if location_name not in self.locations[connected_to]['connections']:
+                    self.locations[connected_to]['connections'].append(location_name)
+        
+        # Add to dynamic locations
+        self.dynamic_locations[location_name] = location_data
+        
+        # Also add to main locations for easy access
+        self.locations[location_name] = location_data
+        
+        return location_data
+
     def move_player(self, destination: str) -> str:
         """
         Move the player to a new location if it's a valid destination.
+        If the destination doesn't exist, create it dynamically.
         
         Args:
             destination: The name of the location to move to
@@ -1212,20 +1418,32 @@ class RPGGame:
             str: Message describing the result of the movement attempt
         """
         current_location = self.current_player.current_location
+        
+        # Get location data, checking both static and dynamic locations
         location_data = self.locations.get(current_location, {})
         
         # Check if destination is a valid location from current location
         connections = location_data.get('connections', [])
-        if not connections:
-            return f"You can't go anywhere from {current_location}."
-            
+        
         # Find the destination in the connections (case-insensitive)
         destination_lower = destination.lower()
         valid_destinations = [loc for loc in connections if loc.lower() == destination_lower]
         
+        # If no valid destination found in connections, create a new dynamic location
         if not valid_destinations:
-            return f"You can't go to {destination} from here. Available locations: {', '.join(connections)}"
+            # Create a new dynamic location connected to the current one
+            new_location_name = destination  # Use the exact casing the player used
+            self.create_dynamic_location(new_location_name, current_location)
+            valid_destinations = [new_location_name]
             
+            # Add discovery event
+            self.add_important_event(
+                event_type="discovery",
+                description=f"Discovered {new_location_name}",
+                location=new_location_name,
+                importance=8
+            )
+        
         # Get the properly cased destination name
         new_location = valid_destinations[0]
         
@@ -1235,11 +1453,28 @@ class RPGGame:
         # Update session memory
         if 'visited_locations' not in self.session_memory:
             self.session_memory['visited_locations'] = set()
+        
+        is_first_visit = new_location not in self.session_memory['visited_locations']
         self.session_memory['visited_locations'].add(new_location)
         
-        # Return the description of the new location
-        new_location_data = self.locations.get(new_location, {})
-        return f"You have arrived at {new_location}. {new_location_data.get('description', '')}"
+        # Get the location data (which might be from dynamic_locations)
+        new_location_data = self.dynamic_locations.get(new_location) or self.locations.get(new_location, {})
+        
+        # Add discovery message if first visit
+        visit_message = f"You have arrived at {new_location}."
+        if is_first_visit and new_location in self.dynamic_locations:
+            visit_message = f"You discover {new_location}!"
+        
+        # Add location description
+        description = new_location_data.get('description', 'The area looks unfamiliar.')
+        
+        # Add NPCs in the location if any
+        npcs = new_location_data.get('npcs', [])
+        if npcs:
+            npc_list = ", ".join(npcs)
+            description += f"\n\nYou see here: {npc_list}"
+            
+        return f"{visit_message} {description}"
 
     def advance_time(self, minutes: int = None) -> None:
         """
@@ -1430,6 +1665,46 @@ class RPGGame:
         
         return created_npcs
 
+    def _is_follow_up_interaction(self, input_text: str) -> bool:
+        """
+        Check if the input is a follow-up interaction with the current NPC.
+        
+        Args:
+            input_text: The user's input text
+            
+        Returns:
+            bool: True if this is a follow-up interaction
+        """
+        if not self.current_interaction_npc:
+            return False
+            
+        # Simple check for pronouns or follow-up questions
+        follow_up_indicators = [
+            'they', 'them', 'their', 'he', 'she', 'it',
+            'do they', 'does he', 'does she', 'what about',
+            'ask them', 'tell them', 'ask him', 'tell him', 'ask her', 'tell her'
+        ]
+        
+        return any(indicator in input_text for indicator in follow_up_indicators)
+        
+    def _handle_npc_follow_up(self, input_text: str) -> str:
+        """
+        Handle follow-up interactions with the current NPC.
+        
+        Args:
+            input_text: The user's input text
+            
+        Returns:
+            str: The NPC's response
+        """
+        if not self.current_interaction_npc:
+            return "You're not currently interacting with anyone."
+            
+        # For now, just forward to the talk handler with the current NPC
+        # In a more advanced implementation, you could parse the input and generate
+        # a more specific response based on the context
+        return self._handle_talk([self.current_interaction_npc])
+        
     def _handle_talk(self, args: List[str]) -> str:
         """
         Handle conversation with an NPC.
@@ -1593,34 +1868,99 @@ class RPGGame:
         if not user_input.strip():
             return "Please enter a command. Type 'help' for a list of commands."
             
-        # Convert to lowercase for case-insensitive matching
+        # Check for potential NPC names in the input
+        if self.current_player:
+            current_location = self.current_player.current_location
+            visible_npcs = self.get_visible_npcs()
+            
+            # Look for potential NPC names in the input
+            for word in user_input.split():
+                word_lower = word.lower()
+                # Skip if it's a command word, too short, or already a known NPC
+                if (len(word) < 3 or 
+                    word_lower in [cmd.lower() for cmd in self.command_handlers.keys()] or
+                    any(npc.lower() == word_lower for npc in visible_npcs)):
+                    continue
+                    
+                # Check if this looks like an NPC name
+                if self.is_likely_npc_name(word):
+                    # Create a new temporary NPC
+                    npc = self.create_random_npc(word)
+                    self.current_interaction_npc = npc.name
+                    return (
+                        f"A figure named {npc.name} notices your attention. "
+                        f"They look like a {npc.personality} {npc.role}.\n\n"
+                        f"{npc.name} says, '{random.choice(['Can I help you?', 'Hello there!', 'Yes?', 'Need something?'])}'"
+                    )
+        
+        # Add user input to history
+        self.add_to_history("user", user_input)
+        
         input_lower = user_input.strip().lower()
         
-        # First try to find a multi-word command match (like 'what time is it')
-        for cmd in self.command_handlers:
-            if ' ' in cmd and input_lower.startswith(cmd):
-                # Extract arguments after the command
+        # First check for exact command matches or single-letter commands with space after
+        # This handles cases like "i " (inventory) vs "i call" (interaction)
+        for cmd in sorted(self.command_handlers.keys(), key=len, reverse=True):
+            # Check for exact match or command followed by space
+            if input_lower == cmd or input_lower.startswith(cmd + ' '):
                 args = user_input[len(cmd):].strip().split()
                 try:
-                    return self.command_handlers[cmd](args)
+                    response = self.command_handlers[cmd](args)
+                    self.add_to_history("assistant", response)
+                    return response
                 except Exception as e:
-                    return f"Error executing command: {str(e)}"
+                    error_msg = f"Error executing command: {str(e)}"
+                    self.add_to_history("system", f"ERROR: {error_msg}")
+                    return error_msg
         
-        # If no multi-word command matched, split into command and arguments
-        parts = input_lower.split()
-        command = parts[0]
-        args = parts[1:] if len(parts) > 1 else []
+        # Track if this is a follow-up interaction with the last NPC
+        if self.current_interaction_npc and self._is_follow_up_interaction(input_lower):
+            # Handle follow-up interaction with the last NPC
+            return self._handle_npc_follow_up(input_lower)
+            
+        # Handle natural language interactions with NPCs
+        current_location = self.current_player.current_location if self.current_player else None
+        if current_location and current_location in self.locations:
+            location_data = self.locations[current_location]
+            npc_names = location_data.get('npcs', [])
+            
+            # Check if the input is directed at an NPC
+            for npc_name in npc_names:
+                npc_lower = npc_name.lower()
+                # Check for patterns like "tell [npc]" or "ask [npc]" or "[npc],"
+                if (f" {npc_lower} " in f" {input_lower} " or  # NPC name in the middle
+                    input_lower.startswith(f"{npc_lower} ") or  # Starts with NPC name
+                    f", {npc_lower}" in f" {input_lower}" or  # After a comma
+                    input_lower == npc_lower):  # Just the NPC name
+                    self.current_interaction_npc = npc_name
+                    return self._handle_talk([npc_name])
+                
+                # Handle "call out to [npc]" pattern
+                if f"call out to {npc_lower}" in input_lower:
+                    self.current_interaction_npc = npc_name
+                    return f"You call out to {npc_name}.\n" + self._handle_talk([npc_name])
         
-        # Check if the command exists in the command handlers
-        if command in self.command_handlers:
-            try:
-                # Call the appropriate handler with the arguments
-                return self.command_handlers[command](args)
-            except Exception as e:
-                logger.error(f"Error executing command '{command}': {str(e)}")
-                return f"An error occurred while processing your command: {str(e)}"
-        else:
-            return f"Unknown command: {command}. Type 'help' for a list of available commands."
+        # If we get here, no command matched - check for common patterns
+        if any(word in input_lower for word in ["talk to", "speak to", "ask", "tell"]):
+            # If we have a current interaction NPC, direct the message to them
+            if self.current_interaction_npc:
+                return self._handle_talk([self.current_interaction_npc])
+            return "Who would you like to talk to?"
+            
+        # Check if this looks like an attempt to interact with an NPC
+        if any(word in input_lower for word in ["hello", "hi", "hey", "greet"]):
+            if current_location and current_location in self.locations:
+                npc_names = self.locations[current_location].get('npcs', [])
+                if npc_names:
+                    # If we have a current interaction NPC, greet them
+                    if self.current_interaction_npc and self.current_interaction_npc in npc_names:
+                        return f"You greet {self.current_interaction_npc}.\n" + self._handle_talk([self.current_interaction_npc])
+                    # Otherwise greet the first NPC in the location
+                    self.current_interaction_npc = npc_names[0]
+                    return f"You greet {npc_names[0]}.\n" + self._handle_talk([npc_names[0]])
+        
+        # If no command matched and it's not an NPC interaction, show help
+        return f"I'm not sure what you mean by '{user_input}'. Type 'help' for a list of commands or try 'talk to [NPC]' to speak with someone."
 
     def _handle_time(self, args: List[str]) -> str:
         """
@@ -1671,6 +2011,140 @@ class RPGGame:
             response.append(f"\nYou see here: {npc_list}")
             
         return "\n".join(response)
+
+    def add_to_history(self, role: str, content: str) -> None:
+        """Add a message to the conversation history."""
+        self.conversation_history.append({
+            "role": role,
+            "content": content,
+            "timestamp": time.strftime("%Y-%m-%d %H:%M:%S")
+        })
+        
+        # Check if we should condense the history
+        if len(self.conversation_history) >= 20:  # Adjust this threshold as needed
+            self.condense_history()
+    
+    def condense_history(self) -> None:
+        """
+        Summarize the conversation history into a memory blob using Groq.
+        Clears the history after summarization.
+        """
+        if not self.conversation_history:
+            return
+            
+        try:
+            # Create a copy of the current history
+            old_messages = list(self.conversation_history)
+            
+            # Prepare the prompt for summarization
+            prompt = """
+            Summarize the following conversation into a concise set of key facts, 
+            important details, and character information that the AI DM should remember. 
+            Focus on:
+            - Important character details (names, relationships, traits)
+            - Significant events or decisions
+            - Player preferences or playstyle
+            - Any other important information for maintaining continuity
+            
+            Conversation:
+            """
+            
+            # Format the conversation history
+            conversation_text = "\n".join(
+                f"{msg['role'].upper()}: {msg['content']}" 
+                for msg in old_messages
+            )
+            
+            # Get the summary from Groq
+            summary = self.groq_engine.generate_description({
+                "prompt": prompt + "\n" + conversation_text,
+                "max_tokens": 500  # Adjust as needed
+            })
+            
+            # Update the memory summary with the new information
+            if self.memory_summary:
+                self.memory_summary = f"{self.memory_summary}\n\n{summary}"
+            else:
+                self.memory_summary = summary
+                
+            # Clear the history
+            self.conversation_history.clear()
+            
+            logger.info("Successfully condensed conversation history into memory summary")
+            
+        except Exception as e:
+            logger.error(f"Error condensing conversation history: {e}")
+            # Don't clear the history if summarization failed
+            return
+        
+    def update_memory_summary(self, new_info: str) -> None:
+        """Update the memory summary with new information."""
+        if not self.memory_summary:
+            self.memory_summary = new_info
+        else:
+            self.memory_summary = f"{self.memory_summary}\n{new_info}"
+            
+    def get_game_state(self) -> Dict[str, Any]:
+        """Get the complete game state for saving."""
+        return {
+            "player": self.current_player.to_dict() if self.current_player else None,
+            "conversation_history": list(self.conversation_history),
+            "memory_summary": self.memory_summary,
+            "game_time": self.game_time,
+            "current_location": self.current_player.current_location if self.current_player else None,
+        }
+        
+    def save_game(self, save_name: Optional[str] = None) -> str:
+        """Save the current game state to a file."""
+        if not self.current_player:
+            return "No active game to save."
+            
+        save_name = save_name or "autosave"
+        save_path = os.path.join(self.save_dir, f"{save_name}.json")
+        
+        try:
+            os.makedirs(self.save_dir, exist_ok=True)
+            with open(save_path, 'w') as f:
+                json.dump(self.get_game_state(), f, indent=2)
+            return f"Game saved as '{save_name}'."
+        except Exception as e:
+            return f"Failed to save game: {str(e)}"
+            
+    def load_game(self, save_name: str) -> str:
+        """Load a game state from a save file."""
+        save_path = os.path.join(self.save_dir, f"{save_name}.json")
+        
+        try:
+            with open(save_path, 'r') as f:
+                save_data = json.load(f)
+                
+            # Load player data
+            if save_data["player"]:
+                self.current_player = Character.from_dict(save_data["player"])
+                
+            # Load conversation history
+            self.conversation_history = deque(
+                save_data.get("conversation_history", []),
+                maxlen=100
+            )
+            
+            # Load memory summary
+            self.memory_summary = save_data.get("memory_summary", "")
+            
+            # Load game time
+            if "game_time" in save_data:
+                self.game_time = save_data["game_time"]
+                
+            # Load current location if it exists
+            if "current_location" in save_data and save_data["current_location"] and self.current_player:
+                self.current_player.current_location = save_data["current_location"]
+                
+            return f"Game loaded from '{save_name}'."
+            
+        except FileNotFoundError:
+            return f"Save file '{save_name}' not found."
+        except Exception as e:
+            return f"Failed to load game: {str(e)}"
 
     def _handle_exits(self, args: List[str]) -> str:
         """
@@ -1928,7 +2402,45 @@ class RPGGame:
         result.append("\nUse 'load <number>' to load a save.")
         return "\n".join(result)
 
-    def _handle_help(self, args: List[str]) -> str:
+    def reset_game_state(self):
+        """Reset the game state while preserving configuration."""
+        # Clear temporary NPCs and dynamic locations
+        self.remove_temporary_npcs()
+        self.dynamic_locations.clear()
+        
+        # Reset player state
+        self.current_player = None
+        self.combat_mode = False
+        self.current_enemy = None
+        self.session_history = []
+        self.conversation_history.clear()
+        self.memory_summary = ""
+        self._current_location_cache = {}
+        self._last_known_player_location = None
+        self.current_interaction_npc = None
+        
+        # Reset session memory but keep configuration
+        self.session_memory = {
+            "actions": [],
+            "player_state": {},
+            "location_history": [],
+            "npc_interactions": {},
+            "environment": {},
+            "last_prompt": "",
+            "last_response": "",
+            "context_summary": "",
+            "important_events": [],
+            "visited_locations": set(),
+            "npcs_met": set(),
+        }
+        
+        # Reinitialize game data
+        self.initialize_locations()
+        self._initialize_npcs()
+        
+        return "Game state has been reset."
+
+    def _handle_help(self, args: List[str] = None) -> str:
         """Display help information about available commands and game features."""
         help_text = [
             f"\n=== {self.current_player.name}'s Adventure - Help ===" if self.current_player else "\n=== Adventure Game - Help ===",
@@ -2281,6 +2793,13 @@ class RPGGame:
             elif character_class.lower() == "rogue":
                 self.current_player.add_item(Item("Dagger", "weapon", {"bonus": 4, "weight": 1}))
                 self.current_player.add_item(Item("Leather Armor", "armor", {"bonus": 2, "weight": 2}))
+            
+            # Add starting gold pieces (10 gp) to inventory
+            self.current_player.add_item(Item("Gold Pieces", "currency", {"value": 1, "weight": 0.02}, stackable=True, max_stack=1000))
+            gold_item = self.current_player.get_item("Gold Pieces")
+            if gold_item:
+                gold_item.quantity = 10  # Start with 10 gold pieces
+                
             return self.current_player
         except ValueError as e:
             logger.error("Error creating character: %s", e)

@@ -105,9 +105,46 @@ def main():
                         print("="*80)
                     except Exception as e:
                         print(f"\nError talking to NPC: {str(e)}")
-            elif choice in ['7', 'exit', 'quit']:
-                print("\nThank you for playing!")
-                break
+            elif choice == '7':  # Save game
+                filename = input("\nEnter save file name (leave blank for auto-name): ").strip()
+                try:
+                    save_path = game.save_game(filename or None)
+                    print(f"\nGame saved successfully to: {save_path}")
+                except Exception as e:
+                    print(f"\nError saving game: {str(e)}")
+            elif choice == '8':  # Load game
+                print("\nAvailable saves:")
+                try:
+                    saves = game.list_saves()
+                    if not saves:
+                        print("No save files found.")
+                        continue
+                        
+                    for i, save in enumerate(saves, 1):
+                        print(f"{i}. {save}")
+                    
+                    while True:
+                        try:
+                            selection = input("\nSelect save to load (number) or 'c' to cancel: ").strip().lower()
+                            if selection == 'c':
+                                break
+                                
+                            idx = int(selection) - 1
+                            if 0 <= idx < len(saves):
+                                game = game.load_game(saves[idx])
+                                print(f"\nGame loaded successfully from: {saves[idx]}")
+                                context = {"current_location": game.current_player.current_location if game.current_player else "Unknown"}
+                                break
+                            else:
+                                print("Invalid selection. Please try again.")
+                        except ValueError:
+                            print("Please enter a valid number or 'c' to cancel.")
+                except Exception as e:
+                    print(f"\nError loading game: {str(e)}")
+            elif choice in ['9', 'exit', 'quit']:
+                if input("\nAre you sure you want to quit? Any unsaved progress will be lost. (y/n): ").lower() == 'y':
+                    print("\nThank you for playing!")
+                    break
             else:
                 print("\nInvalid choice. Please try again.")
                 
